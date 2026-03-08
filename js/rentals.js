@@ -137,6 +137,14 @@
       typeof window.debugCurrency.convertAmount === "function"
     )
       return window.debugCurrency.convertAmount(amount, from, to);
+
+    // fallback: use exchange rates directly if available
+    try {
+      var rates = window.__bhbRates;
+      if (rates && rates[from] && rates[from][to]) {
+        return amount * rates[from][to];
+      }
+    } catch (e) {}
     return amount;
   }
   function savedCurrency() {
