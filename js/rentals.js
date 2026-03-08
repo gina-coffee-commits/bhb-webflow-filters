@@ -605,6 +605,13 @@
       updateSliderForCurrency(state.currency);
       updateChips(state.currency);
     });
+
+    // fallback: if rates loaded before rent.js registered the listener
+    if (window.debugCurrency && typeof window.debugCurrency.convertAmount === "function") {
+      computeBaseBounds();
+      updateSliderForCurrency(state.currency);
+      updateChips(state.currency);
+    }
   }
 
   // ─── card data ────────────────────────────────────────────────────────────
