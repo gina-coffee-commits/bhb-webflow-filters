@@ -1,0 +1,334 @@
+/* ─── BHB Filter — Shared Styles ──────────────────────────────────────────── */
+
+/* Dropdowns */
+.filter-dropdown,
+.price-dropdown,
+.location-dropdown {
+  display: none;
+  position: absolute;
+  z-index: 999;
+  background: #fff;
+  border: 1px solid #e5e0db;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+  min-width: 220px;
+  overflow: hidden;
+}
+.filter-dropdown.is-open,
+.price-dropdown.is-open,
+.location-dropdown.is-open {
+  display: block;
+}
+
+/* Filter Options */
+.filter-option {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #3a2e28;
+  transition: background 0.12s;
+}
+.filter-option:hover { background: #f5f1ee; }
+.filter-option.is-active {
+  background: #3a2e28;
+  color: #fff;
+}
+
+/* Trigger active state */
+.filter-trigger.is-active,
+.price-trigger.is-active,
+.location-trigger.is-active {
+  background: #3a2e28;
+  color: #fff;
+}
+
+/* Dropdown close button */
+.drop-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #3a2e28;
+  padding: 0;
+  z-index: 10;
+}
+.drop-close-btn:hover { opacity: 0.6; }
+
+/* ─── Price Slider ─────────────────────────────────────────────────────────── */
+.pw-slider {
+  position: relative;
+  height: 6px;
+  margin: 24px 8px 12px;
+  user-select: none;
+}
+.pw-track {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #e5e0db;
+  border-radius: 3px;
+}
+#pwFill {
+  position: absolute;
+  top: 0;
+  height: 6px;
+  background: #3a2e28;
+  border-radius: 3px;
+  pointer-events: none;
+}
+.pw-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #3a2e28;
+  cursor: grab;
+  z-index: 2;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.pw-thumb:active { cursor: grabbing; }
+
+.pw-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #a09080;
+  margin-top: 4px;
+  padding: 0 8px;
+}
+
+/* Price chips */
+.pw-chip {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1.5px solid #e5e0db;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #3a2e28;
+  cursor: pointer;
+  margin: 4px 4px 0 0;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.pw-chip:hover { border-color: #3a2e28; }
+.pw-chip.is-active {
+  background: #3a2e28;
+  border-color: #3a2e28;
+  color: #fff;
+}
+
+/* Price text inputs */
+#pwMinText,
+#pwMaxText {
+  width: 90px;
+  padding: 6px 10px;
+  border: 1.5px solid #e5e0db;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #3a2e28;
+  text-align: right;
+}
+#pwMinText:focus,
+#pwMaxText:focus {
+  outline: none;
+  border-color: #3a2e28;
+}
+
+/* ─── Location Dropdown ────────────────────────────────────────────────────── */
+.location-dropdown {
+  width: 560px;
+  max-width: 96vw;
+}
+.location-panel {
+  display: flex;
+  flex-direction: column;
+  height: 420px;
+  padding: 16px;
+  gap: 12px;
+}
+.location-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid #e5e0db;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #3a2e28;
+  box-sizing: border-box;
+}
+.location-search-input:focus {
+  outline: none;
+  border-color: #3a2e28;
+}
+
+/* Pills */
+.pill-scroll {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pill {
+  padding: 5px 14px;
+  border: 1.5px solid #e5e0db;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #3a2e28;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.pill:hover { border-color: #3a2e28; }
+.pill.is-active {
+  background: #3a2e28;
+  border-color: #3a2e28;
+  color: #fff;
+}
+
+/* Tree */
+.tree-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+.tree-item { margin-bottom: 4px; }
+.tree-parent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3a2e28;
+  transition: background 0.12s;
+}
+.tree-parent:hover { background: #f5f1ee; }
+.tree-parent.is-active { background: #f0ebe6; }
+.tree-chevron {
+  margin-left: auto;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid #a09080;
+  border-bottom: 2px solid #a09080;
+  transform: rotate(45deg);
+  transition: transform 0.15s;
+}
+.children { display: none; }
+.children.open { display: block; }
+.children-inner { display: flex; padding-left: 16px; }
+.branch {
+  width: 1px;
+  background: #e5e0db;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+.child-list { flex: 1; }
+.child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #5a4e48;
+  transition: background 0.12s;
+}
+.child:hover { background: #f5f1ee; }
+.child.is-active {
+  background: #3a2e28;
+  color: #fff;
+}
+
+/* Map */
+#bhbMap {
+  width: 100%;
+  height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.map-marker-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.map-marker-label {
+  background: #fff;
+  border: 1px solid #e5e0db;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #3a2e28;
+  margin-top: 2px;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+
+/* Location action row */
+.loc-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #a09080;
+}
+.loc-btn-clear-inline,
+.loc-btn-apply-inline {
+  padding: 7px 18px;
+  border-radius: 8px;
+  border: 1.5px solid #e5e0db;
+  background: #fff;
+  font-size: 13px;
+  color: #3a2e28;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.loc-btn-clear-inline:hover { background: #f5f1ee; }
+.loc-btn-apply-inline {
+  background: #3a2e28;
+  color: #fff;
+  border-color: #3a2e28;
+}
+.loc-btn-apply-inline:hover { background: #5a4e48; }
+
+/* Pin icons */
+.pin-box,
+.mini-pin-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.pin-icon { width: 18px; height: 18px; object-fit: contain; }
+.pin-icon-sm { width: 14px; height: 14px; object-fit: contain; }
+
+/* ─── Load More / Back to Top ──────────────────────────────────────────────── */
+#btn-back-top {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 28px;
+  border-radius: 12px;
+  border: 1.5px solid #3a2e28;
+  background: #fff;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3a2e28;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  margin: 16px auto 0;
+}
+#btn-back-top:hover {
+  background: #3a2e28;
+  color: #fff;
+}
