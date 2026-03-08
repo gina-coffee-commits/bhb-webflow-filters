@@ -127,6 +127,10 @@
         }
       }
     }
+    // Also reset price trigger (lives inside .price-trigger-wrapper, not .filter-field)
+    if (el.priceTrigger && (!except || except !== el.priceDropdown)) {
+      el.priceTrigger.classList.remove('is-active');
+    }
     if (locDropOpen && el.locDropdown && el.locDropdown !== except) {
       locDropOpen = false;
       if (el.locTrigger) el.locTrigger.classList.remove('is-active');
@@ -405,7 +409,15 @@
     if (el.priceTrigger && el.priceDropdown) {
       el.priceTrigger.addEventListener('click', function (e) {
         e.stopPropagation();
-        toggleDrop(el.priceDropdown);
+        var isOpen = el.priceDropdown.style.display === 'block';
+        closeAll();
+        if (!isOpen) {
+          el.priceDropdown.style.display = 'block';
+          el.priceDropdown.classList.add('is-open');
+          el.priceTrigger.classList.add('is-active');
+        } else {
+          el.priceTrigger.classList.remove('is-active');
+        }
       });
       el.priceDropdown.addEventListener('click', function (e) { e.stopPropagation(); });
     }
@@ -634,7 +646,10 @@
       if (!p) continue;
       chips[i].dataset.min = String(p.min);
       chips[i].dataset.max = String(p.max !== null ? p.max : slider.active.max);
-      chips[i].textContent = p.label;
+      // Handle inner text-node div (Webflow structure)
+      var textNode = chips[i].querySelector('.text-node');
+      if (textNode) textNode.textContent = p.label;
+      else chips[i].textContent = p.label;
     }
   }
 
@@ -880,20 +895,22 @@
       searchInput:  panel.querySelector('.location-search-input'),
       treeScroll:   panel.querySelector('.tree-scroll'),
       pillScroll:   panel.querySelector('.pill-scroll'),
-      selectedInfo: panel.querySelector('#locSelectedInfo'),
+      selectedInfo: panel.querySelector('#locSelectedInfo') || panel.querySelector('.loc-selected-info'),
       btnClear:     panel.querySelector('.loc-btn-clear-inline'),
       btnApply:     panel.querySelector('.loc-btn-apply-inline')
     };
 
     if (!locUI.searchInput || !locUI.treeScroll || !locUI.pillScroll) return;
     locUI.searchInput.addEventListener('input', renderLocLists);
-    if (locUI.btnClear) locUI.btnClear.addEventListener('click', function () {
+    if (locUI.btnClear) locUI.btnClear.addEventListener('click', function (e) {
+      e.preventDefault();
       draftLocs = [];
       renderLocLists();
       syncMapWith(draftLocs);
       updateDraftInfo();
     });
-    if (locUI.btnApply) locUI.btnApply.addEventListener('click', function () {
+    if (locUI.btnApply) locUI.btnApply.addEventListener('click', function (e) {
+      e.preventDefault();
       commitDraft();
       openLocDrop(false);
     });
