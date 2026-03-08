@@ -515,6 +515,20 @@
       setCurrency(c);
     });
 
+    // wait for exchange rates to be available, then recompute slider bounds
+    (function waitForRates() {
+      if (
+        window.debugCurrency &&
+        typeof window.debugCurrency.convertAmount === "function"
+      ) {
+        computeBaseBounds();
+        updateSliderForCurrency(state.currency);
+        updateChips(state.currency);
+      } else {
+        setTimeout(waitForRates, 200);
+      }
+    })();
+
     window.addEventListener("bhb:rates-ready", function () {
       computeBaseBounds();
       updateSliderForCurrency(state.currency);
