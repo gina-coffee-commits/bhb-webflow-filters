@@ -1,12 +1,18 @@
 (function () {
   "use strict";
+
+  // prevent double init
   if (window.__bhbFilterInited) return;
   window.__bhbFilterInited = true;
+
+  // ─── config ───────────────────────────────────────────────────────────────
   var CFG = { GRID_ID: "rentals-wrapper", CARD_SEL: ".w-dyn-item", STEP: 9 };
   var MAPTILER_KEY = "c43H8q7pFefMtElMtWBS";
   var MAP_STYLE = "019c8e23-ebd1-7221-bd5f-20ae2dca2ab6";
   var PIN_URL =
     "https://cdn.prod.website-files.com/67344ae68adf4fc1f539002d/69a009335d3c16a421dd917a_Icon.svg";
+
+  // ─── area groupings for location filter ───────────────────────────────────
   var AREA_RULES = [
     {
       id: "canggu-area",
@@ -22,6 +28,7 @@
         "tumbak bayuh",
         "buwit",
         "dalung",
+        "buduk",
       ],
     },
     {
@@ -29,13 +36,19 @@
       label: "Uluwatu area",
       keys: ["bingin", "uluwatu", "uluwatu center", "ungasan"],
     },
-    { id: "ubud-area", label: "Ubud area", keys: ["ubud", "ubud center"] },
+    {
+      id: "ubud-area",
+      label: "Ubud area",
+      keys: ["ubud", "ubud center"],
+    },
     {
       id: "tabanan-area",
       label: "Tabanan area",
       keys: ["kedungu", "nyanyi", "pandak gede", "nyambu", "tanah lot"],
     },
   ];
+
+  // ─── map pin coordinates per location ─────────────────────────────────────
   var LOC_COORDS = {
     canggu: [115.1365, -8.65062],
     pererenan: [115.12346, -8.64904],
@@ -47,6 +60,7 @@
     "tumbak bayuh": [115.14562, -8.61484],
     buwit: [115.12362, -8.59905],
     dalung: [115.17258, -8.61147],
+    buduk: [115.16343, -8.60770],
     bingin: [115.092, -8.812],
     uluwatu: [115.088, -8.82828],
     "uluwatu center": [115.088, -8.82828],
@@ -59,6 +73,8 @@
     nyambu: [115.132, -8.578],
     "tanah lot": [115.12604, -8.58208],
   };
+
+  // ─── price chip presets per currency ──────────────────────────────────────
   var CHIP_PRESETS = {
     IDR: [
       { label: "< 50jt", min: 0, max: 50000000 },
@@ -76,6 +92,8 @@
       { label: "> \u20ac12k", min: 12000, max: null },
     ],
   };
+
+  // ─── state ────────────────────────────────────────────────────────────────
   var allCards = [],
     filtered = [],
     visible = 0;
@@ -86,6 +104,7 @@
   var areas = [],
     draftLocs = [],
     labelByNorm = {};
+
   var state = {
     availability: "Any",
     bedrooms: [],
@@ -95,14 +114,20 @@
     priceMax: null,
     keyword: "",
   };
+
   var slider = {
-    base: { min: 0, max: 5000000 },
-    active: { min: 0, max: 5000000 },
+    base: { min: 0, max: 5000000 }, // raw IDR bounds from CMS
+    active: { min: 0, max: 5000000 }, // converted to selected currency
     minRatio: 0,
     maxRatio: 1,
   };
+
   var el = {},
     locUI = {};
+
+  // ─── helpers ──────────────────────────────────────────────────────────────
+
+  // normalise strings for comparison
   function norm(v) {
     return String(v || "")
       .toLowerCase()
@@ -111,12 +136,16 @@
       .replace(/[^\w\s]/g, "")
       .replace(/\s+/g, " ");
   }
+
+  // validate currency code
   function normCurrency(v) {
     var c = String(v || "")
       .trim()
       .toUpperCase();
     return c === "USD" || c === "EUR" || c === "IDR" ? c : "IDR";
   }
+
+  // shorten large numbers for display
   function short(n) {
     var a = Math.abs(n);
     if (a >= 1e9) return (n / 1e9).toFixed(1).replace(".0", "") + "B";
@@ -124,29 +153,31 @@
     if (a >= 1e3) return (n / 1e3).toFixed(1).replace(".0", "") + "k";
     return String(Math.round(n));
   }
+
   function symFor(c) {
     return c === "USD" ? "$" : c === "EUR" ? "\u20ac" : "Rp";
   }
+
   function getCurrentSym() {
     return symFor(state.currency);
   }
+
+  // ─── currency conversion ──────────────────────────────────────────────────
+  // relies on window.debugCurrency.convertAmount exposed by the global currency script.
+  // if rates aren't loaded yet, returns the raw amount unchanged —
+  // bounds are recomputed once bhb:rates-ready fires.
   function convertAmount(amount, from, to) {
     if (from === to) return amount;
     if (
       window.debugCurrency &&
       typeof window.debugCurrency.convertAmount === "function"
-    )
+    ) {
       return window.debugCurrency.convertAmount(amount, from, to);
-
-    // fallback: use exchange rates directly if available
-    try {
-      var rates = window.__bhbRates;
-      if (rates && rates[from] && rates[from][to]) {
-        return amount * rates[from][to];
-      }
-    } catch (e) {}
+    }
     return amount;
   }
+
+  // read saved currency from localStorage
   function savedCurrency() {
     try {
       return normCurrency(localStorage.getItem("selectedCurrency") || "IDR");
@@ -154,6 +185,9 @@
       return "IDR";
     }
   }
+
+  // ─── dropdown helpers ─────────────────────────────────────────────────────
+
   function closeAll(except) {
     var drops = document.querySelectorAll(
       ".filter-dropdown,.price-dropdown,.location-dropdown",
@@ -176,6 +210,7 @@
       if (el.locTrigger) el.locTrigger.classList.remove("is-active");
     }
   }
+
   function toggleDrop(dd) {
     var isOpen = dd.style.display === "block";
     closeAll();
@@ -190,6 +225,9 @@
       }
     }
   }
+
+  // ─── DOM cache ────────────────────────────────────────────────────────────
+
   function cacheEls() {
     el = {
       keywordInput:
@@ -221,6 +259,8 @@
       btnBackTop: null,
       grid: document.getElementById(CFG.GRID_ID),
     };
+
+    // detect filter fields by their option values
     var fields = document.querySelectorAll(".filter-field");
     for (var i = 0; i < fields.length; i++) {
       var field = fields[i];
@@ -243,6 +283,10 @@
       }
     }
   }
+
+  // ─── filter field init ────────────────────────────────────────────────────
+
+  // single-select dropdown (availability, currency)
   function initSingle(field, onPick) {
     if (!field) return;
     var trigger = field.querySelector(".filter-trigger");
@@ -277,6 +321,8 @@
       e.stopPropagation();
     });
   }
+
+  // multi-select dropdown (bedrooms)
   function initMulti(field, onPick) {
     if (!field) return;
     var trigger = field.querySelector(".filter-trigger");
@@ -330,6 +376,9 @@
       e.stopPropagation();
     });
   }
+
+  // ─── state collection ─────────────────────────────────────────────────────
+
   function collectState() {
     if (el.availField) {
       var a = el.availField.querySelector(".filter-option.is-active");
@@ -349,6 +398,9 @@
     }
     if (el.keywordInput) state.keyword = el.keywordInput.value.trim();
   }
+
+  // ─── clear all filters ────────────────────────────────────────────────────
+
   function clearAll(e) {
     if (e) e.preventDefault();
     function resetToAny(field, trigText, label) {
@@ -387,6 +439,7 @@
     syncMap();
     setCurrency("IDR");
   }
+
   function closeMobilePanel() {
     if (window.innerWidth < 768) {
       var panel = document.querySelector(".rent-filter_form-block");
@@ -395,6 +448,8 @@
     closeAll();
     if (locDropOpen) openLocDrop(false);
   }
+
+  // inject close buttons into filter dropdowns
   function injectDropdownCloseBtns() {
     var drops = document.querySelectorAll(".filter-dropdown,.price-dropdown");
     for (var i = 0; i < drops.length; i++) {
@@ -419,6 +474,9 @@
       })(drops[i]);
     }
   }
+
+  // ─── event binding ────────────────────────────────────────────────────────
+
   function bindEvents() {
     initSingle(el.availField, function (val) {
       state.availability = val;
@@ -431,6 +489,8 @@
     initSingle(el.currField, function (val) {
       setCurrency(val);
     });
+
+    // keyword search — fires on enter or after 300ms pause
     if (el.keywordInput) {
       el.keywordInput.addEventListener("keydown", function (e) {
         if (e.key !== "Enter") return;
@@ -447,8 +507,10 @@
         }, 300);
       });
     }
+
     if (el.btnClear) el.btnClear.addEventListener("click", clearAll);
-    if (el.btnSearch)
+
+    if (el.btnSearch) {
       el.btnSearch.addEventListener("click", function (e) {
         e.preventDefault();
         collectState();
@@ -460,6 +522,8 @@
           if (panel) panel.style.display = "none";
         }
       });
+    }
+
     var closeBtns = document.querySelectorAll(".close-btn");
     for (var i = 0; i < closeBtns.length; i++) {
       closeBtns[i].addEventListener("click", function (e) {
@@ -467,12 +531,14 @@
         closeMobilePanel();
       });
     }
+
     if (el.btnLoadMore) {
       el.btnLoadMore.addEventListener("click", function (e) {
         e.preventDefault();
         showNext();
       });
     }
+
     if (el.priceTrigger && el.priceDropdown) {
       el.priceTrigger.addEventListener("click", function (e) {
         e.stopPropagation();
@@ -482,6 +548,7 @@
         e.stopPropagation();
       });
     }
+
     if (el.locTrigger) {
       el.locTrigger.addEventListener("click", function (e) {
         e.stopPropagation();
@@ -494,10 +561,14 @@
           }, 80);
       });
     }
-    if (el.locDropdown)
+
+    if (el.locDropdown) {
       el.locDropdown.addEventListener("click", function (e) {
         e.stopPropagation();
       });
+    }
+
+    // close dropdowns when clicking outside
     document.addEventListener("click", function (e) {
       var inFilter = false;
       var zones = document.querySelectorAll(
@@ -517,32 +588,27 @@
         closeAll();
       }
     });
+
+    // sync filter currency when global currency script changes it
     window.addEventListener("bhb:currency-changed", function (e) {
       var c =
         e.detail && e.detail.currency ? e.detail.currency : savedCurrency();
       setCurrency(c);
     });
 
-    // wait for exchange rates to be available, then recompute slider bounds
-    (function waitForRates() {
-      if (
-        window.debugCurrency &&
-        typeof window.debugCurrency.convertAmount === "function"
-      ) {
-        computeBaseBounds();
-        updateSliderForCurrency(state.currency);
-        updateChips(state.currency);
-      } else {
-        setTimeout(waitForRates, 200);
-      }
-    })();
-
+    // recompute slider bounds once exchange rates are loaded.
+    // the global currency script fires bhb:rates-ready after fetching rates,
+    // and exposes window.debugCurrency.convertAmount so convertAmount() works.
+    // without this, CMS prices in USD/EUR are not converted before bounds are set.
     window.addEventListener("bhb:rates-ready", function () {
       computeBaseBounds();
       updateSliderForCurrency(state.currency);
       updateChips(state.currency);
     });
   }
+
+  // ─── card data ────────────────────────────────────────────────────────────
+
   function getData(card) {
     var inner = card.querySelector(".listings_card-wrapper") || card;
     return {
@@ -556,6 +622,11 @@
       avail: inner.dataset.availableDate ? "Rented" : "Available",
     };
   }
+
+  // ─── filter logic ─────────────────────────────────────────────────────────
+
+  // price check uses the displayed .price element (already converted by global script)
+  // falls back to raw data-price if display value isn't available
   function passesPrice(d, card) {
     var el2 = card.querySelector(".price");
     var txt = el2 ? el2.textContent.trim() : "";
@@ -565,6 +636,7 @@
     if (state.priceMax !== null && price > state.priceMax) return false;
     return true;
   }
+
   function passes(card) {
     var d = getData(card);
     if (state.availability !== "Any" && d.avail !== state.availability)
@@ -593,28 +665,31 @@
     }
     return true;
   }
+
   function applyFilters() {
     filtered = allCards.filter(passes);
     visible = 0;
     showNext();
     updateUI();
   }
+
+  // ─── card visibility / pagination ─────────────────────────────────────────
+
   function showNext() {
     var next = Math.min(visible + CFG.STEP, filtered.length);
-    for (var i = 0; i < allCards.length; i++) {
+    for (var i = 0; i < allCards.length; i++)
       allCards[i].style.display = "none";
-    }
-    for (var i = 0; i < next; i++) {
-      filtered[i].style.display = "block";
-    }
+    for (var i = 0; i < next; i++) filtered[i].style.display = "block";
     visible = next;
     updateLoadMore();
   }
+
   function updateUI() {
     if (el.resultsCount) el.resultsCount.textContent = filtered.length;
     if (el.emptyState)
       el.emptyState.style.display = filtered.length === 0 ? "" : "none";
   }
+
   function injectBackToTop() {
     if (el.btnBackTop) return;
     var btt = document.createElement("button");
@@ -643,6 +718,7 @@
     }
     el.btnBackTop = btt;
   }
+
   function updateLoadMore() {
     injectBackToTop();
     if (!el.btnLoadMore) return;
@@ -656,6 +732,9 @@
       if (el.btnBackTop) el.btnBackTop.style.display = "none";
     }
   }
+
+  // ─── currency ─────────────────────────────────────────────────────────────
+
   function setCurrency(currency) {
     var c = normCurrency(currency || "IDR");
     state.currency = c;
@@ -678,6 +757,11 @@
       applyFilters();
     }, 80);
   }
+
+  // ─── slider bounds ────────────────────────────────────────────────────────
+  // converts all CMS prices to IDR first to get a consistent base range.
+  // cards with non-IDR prices are skipped if conversion fails (rates not loaded yet).
+  // bounds recompute correctly once bhb:rates-ready fires.
   function computeBaseBounds() {
     var lo = Infinity,
       hi = -Infinity;
@@ -685,11 +769,16 @@
       var d = getData(allCards[i]);
       if (!d.price || !isFinite(d.price)) continue;
       var idr = convertAmount(d.price, d.currency || "IDR", "IDR");
+      // skip if conversion silently failed (returned raw value unchanged)
+      if (d.currency !== "IDR" && idr === d.price) continue;
       if (idr < lo) lo = idr;
       if (idr > hi) hi = idr;
     }
     if (isFinite(lo) && isFinite(hi)) slider.base = { min: lo, max: hi };
   }
+
+  // ─── price slider ─────────────────────────────────────────────────────────
+
   function fixSliderDOM() {
     var sw = document.querySelector(".pw-slider");
     if (!sw) return;
@@ -712,6 +801,8 @@
     if (minEl) minEl.value = minEl.min;
     if (maxEl) maxEl.value = maxEl.max;
   }
+
+  // update slider display when currency changes — converts IDR base to selected currency
   function updateSliderForCurrency(currency) {
     var c = normCurrency(currency);
     var sym = symFor(c);
@@ -765,6 +856,8 @@
         : sym + short(minV) + " \u2013 " + sym + short(maxV);
     }
   }
+
+  // update quick-select chip labels for selected currency
   function updateChips(currency) {
     var c = normCurrency(currency);
     var presets = CHIP_PRESETS[c] || CHIP_PRESETS["IDR"];
@@ -777,9 +870,12 @@
       chips[i].textContent = p.label;
     }
   }
+
   function initPricePanel() {
     if (!el.priceTrigger || !el.priceDropdown) return;
     fixSliderDOM();
+
+    // replace any non-input elements with actual input fields
     var minTextEl = document.getElementById("pwMinText");
     if (minTextEl && minTextEl.tagName !== "INPUT") {
       var minInput = document.createElement("input");
@@ -798,6 +894,7 @@
       maxInput.inputMode = "numeric";
       maxTextEl.parentNode.replaceChild(maxInput, maxTextEl);
     }
+
     var nativeMin = document.getElementById("pwMin");
     var nativeMax = document.getElementById("pwMax");
     var fillEl = document.getElementById("pwFill");
@@ -806,8 +903,10 @@
     var chips = document.querySelectorAll(".pw-chip");
     var sw = document.querySelector(".pw-slider");
     if (!fillEl || !sw) return;
+
     slider.minRatio = 0;
     slider.maxRatio = 1;
+
     function ratioToVal(r) {
       return slider.active.min + r * (slider.active.max - slider.active.min);
     }
@@ -821,6 +920,7 @@
     function fmt(n) {
       return Number(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
     }
+
     function render() {
       var sym = symFor(state.currency);
       var left = slider.minRatio * 100;
@@ -860,23 +960,23 @@
         );
       }
     }
+
     var THUMB_SIZE = 20,
       dragging = null;
+
     function getRatio(clientX) {
       var rect = sw.getBoundingClientRect();
       var half = THUMB_SIZE / 2;
       var width = rect.width - THUMB_SIZE;
       return clamp((clientX - rect.left - half) / width, 0, 1);
     }
+
     var dragTimer = null;
     function onMove(clientX) {
       if (!dragging) return;
       var r = getRatio(clientX);
-      if (dragging === "min") {
-        slider.minRatio = clamp(r, 0, slider.maxRatio);
-      } else {
-        slider.maxRatio = clamp(r, slider.minRatio, 1);
-      }
+      if (dragging === "min") slider.minRatio = clamp(r, 0, slider.maxRatio);
+      else slider.maxRatio = clamp(r, slider.minRatio, 1);
       fullRender();
       clearTimeout(dragTimer);
       dragTimer = setTimeout(applyFilters, 40);
@@ -896,8 +996,11 @@
       e.preventDefault();
       onMove(e.touches[0].clientX);
     }
+
+    // hide native Webflow embed, use custom thumbs instead
     var embed = sw.querySelector(".w-embed,.code-embed-6");
     if (embed) embed.style.display = "none";
+
     var thumbMin = sw.querySelector(".pw-thumb-min");
     if (!thumbMin) {
       thumbMin = document.createElement("div");
@@ -910,6 +1013,7 @@
       thumbMax.className = "pw-thumb pw-thumb-max";
       sw.appendChild(thumbMax);
     }
+
     function positionThumbs() {
       var left = slider.minRatio * 100;
       var right = slider.maxRatio * 100;
@@ -920,6 +1024,7 @@
       render();
       positionThumbs();
     }
+
     function startDrag(which, e) {
       dragging = which;
       e.preventDefault();
@@ -931,6 +1036,7 @@
         document.addEventListener("touchend", onUp);
       }
     }
+
     thumbMin.addEventListener("mousedown", function (e) {
       startDrag("min", e);
     });
@@ -951,6 +1057,7 @@
       },
       { passive: false },
     );
+
     var trackEl = sw.querySelector(".pw-track");
     if (trackEl) {
       trackEl.style.pointerEvents = "auto";
@@ -964,21 +1071,21 @@
         document.addEventListener("mouseup", onUp);
       });
     }
+
     function bindTextInput(inputEl, which) {
       if (!inputEl || inputEl.tagName !== "INPUT") return;
       inputEl.addEventListener("change", function () {
         var v = parseInt(String(inputEl.value).replace(/[^0-9]/g, ""), 10);
         if (isNaN(v)) return;
         v = clamp(v, slider.active.min, slider.active.max);
-        if (which === "min") {
+        if (which === "min")
           slider.minRatio = valToRatio(
             Math.min(v, ratioToVal(slider.maxRatio)),
           );
-        } else {
+        else
           slider.maxRatio = valToRatio(
             Math.max(v, ratioToVal(slider.minRatio)),
           );
-        }
         fullRender();
         applyFilters();
       });
@@ -988,6 +1095,8 @@
     }
     bindTextInput(minText, "min");
     bindTextInput(maxText, "max");
+
+    // quick-select chips
     for (var i = 0; i < chips.length; i++) {
       (function (ch) {
         ch.addEventListener("click", function () {
@@ -1004,6 +1113,8 @@
         });
       })(chips[i]);
     }
+
+    // inject scale labels below slider
     var scaleEl = document.querySelector(".pw-scale");
     if (!scaleEl) {
       scaleEl = document.createElement("div");
@@ -1018,10 +1129,14 @@
       scaleEl.appendChild(sMax);
       sw.parentNode.insertBefore(scaleEl, sw.nextSibling);
     }
+
     slider.active = { min: slider.base.min, max: slider.base.max };
     updateChips(state.currency);
     fullRender();
   }
+
+  // ─── location UI ──────────────────────────────────────────────────────────
+
   function buildAreas() {
     var locSet = {};
     for (var i = 0; i < allCards.length; i++) {
@@ -1052,6 +1167,7 @@
       return locSet[loc];
     });
   }
+
   function mountLocUI() {
     if (!el.locDropdown) return;
     var panel = el.locDropdown.querySelector(".location-panel");
@@ -1076,11 +1192,8 @@
       mh.className = "location-col-header";
       mh.textContent = "Property Locations";
       var oldH = midCol.querySelector(".select-locations-header");
-      if (oldH) {
-        oldH.parentNode.replaceChild(mh, oldH);
-      } else {
-        midCol.insertBefore(mh, midCol.firstChild);
-      }
+      if (oldH) oldH.parentNode.replaceChild(mh, oldH);
+      else midCol.insertBefore(mh, midCol.firstChild);
     }
     var lsd = panel.querySelector(".location-search-input");
     if (lsd && lsd.tagName !== "INPUT") {
@@ -1100,19 +1213,22 @@
     };
     if (!locUI.searchInput || !locUI.treeScroll || !locUI.pillScroll) return;
     locUI.searchInput.addEventListener("input", renderLocLists);
-    if (locUI.btnClear)
+    if (locUI.btnClear) {
       locUI.btnClear.addEventListener("click", function () {
         draftLocs = [];
         renderLocLists();
         syncMapWith(draftLocs);
         updateDraftInfo();
       });
-    if (locUI.btnApply)
+    }
+    if (locUI.btnApply) {
       locUI.btnApply.addEventListener("click", function () {
         commitDraft();
         openLocDrop(false);
       });
+    }
   }
+
   function renderLocLists() {
     if (!locUI.treeScroll || !locUI.pillScroll) return;
     var q = norm(locUI.searchInput ? locUI.searchInput.value : "");
@@ -1121,9 +1237,8 @@
     for (var x = 0; x < existingItems.length; x++) {
       var pName = existingItems[x].querySelector(".parent-name");
       var cw = existingItems[x].querySelector(".children");
-      if (pName && cw && cw.classList.contains("open")) {
+      if (pName && cw && cw.classList.contains("open"))
         openAreas[pName.textContent.trim()] = true;
-      }
     }
     locUI.treeScroll.innerHTML = "";
     locUI.pillScroll.innerHTML = "";
@@ -1199,6 +1314,7 @@
     }
     updateDraftInfo();
   }
+
   function toggleLoc(loc) {
     var idx = draftLocs.indexOf(loc);
     if (idx > -1) draftLocs.splice(idx, 1);
@@ -1206,6 +1322,7 @@
     renderLocLists();
     syncMapWith(draftLocs);
   }
+
   function toggleArea(areaId) {
     var area = null;
     for (var i = 0; i < areas.length; i++) {
@@ -1231,6 +1348,7 @@
     renderLocLists();
     syncMapWith(draftLocs);
   }
+
   function updateDraftInfo() {
     if (!locUI.selectedInfo) return;
     var n = draftLocs.length;
@@ -1240,6 +1358,7 @@
         "Selected: " + (labelByNorm[draftLocs[0]] || draftLocs[0]);
     else locUI.selectedInfo.textContent = "Selected: " + n + " locations";
   }
+
   function updateLocText() {
     if (!el.locTrigText) return;
     var n = state.locations.length;
@@ -1249,12 +1368,14 @@
         labelByNorm[state.locations[0]] || state.locations[0];
     else el.locTrigText.textContent = n + " locations";
   }
+
   function commitDraft() {
     state.locations = draftLocs.slice();
     updateLocText();
     syncMapWith(state.locations);
     applyFilters();
   }
+
   function openLocDrop(force) {
     locDropOpen = force !== undefined ? force : !locDropOpen;
     if (!el.locDropdown) return;
@@ -1272,6 +1393,9 @@
       }, 80);
     if (!locDropOpen) syncMapWith(state.locations);
   }
+
+  // ─── map ──────────────────────────────────────────────────────────────────
+
   function loadMapSDK(cb) {
     if (window.maptilersdk) return cb();
     if (!document.querySelector("link[data-mt-css]")) {
@@ -1292,6 +1416,7 @@
     js.onload = cb;
     document.head.appendChild(js);
   }
+
   function initMap() {
     if (map) return;
     var mapEl = document.getElementById("bhbMap");
@@ -1311,10 +1436,12 @@
       }, 80);
     });
   }
+
   function clearMarkers() {
     for (var i = 0; i < markers.length; i++) markers[i].remove();
     markers = [];
   }
+
   function makePin(label) {
     var wrap = document.createElement("div");
     wrap.className = "map-marker-wrap";
@@ -1330,9 +1457,11 @@
     wrap.appendChild(txt);
     return wrap;
   }
+
   function syncMap() {
     syncMapWith(state.locations);
   }
+
   function syncMapWith(locations) {
     if (!map || !mapReady) return;
     clearMarkers();
@@ -1376,6 +1505,9 @@
       duration: 450,
     });
   }
+
+  // ─── CMS coordinate hydration ─────────────────────────────────────────────
+
   function hydrateCoordsFromCMS() {
     var nodes = document.querySelectorAll(".location-hidden-embed");
     for (var i = 0; i < nodes.length; i++) {
@@ -1392,6 +1524,7 @@
       if (name && pair) LOC_COORDS[name] = pair;
     }
   }
+
   function decodeEntities(s) {
     return String(s || "")
       .replace(/&quot;/g, '"')
@@ -1399,6 +1532,7 @@
       .replace(/&#x3D;|&#61;/g, "=")
       .replace(/&#x2F;|&#47;/g, "/");
   }
+
   function extractLatLng(embed) {
     var s = decodeEntities(embed),
       m;
@@ -1410,30 +1544,38 @@
     if (m) return [parseFloat(m[2]), parseFloat(m[1])];
     return null;
   }
+
+  // ─── init ─────────────────────────────────────────────────────────────────
+
   function init() {
     cacheEls();
     if (!el.grid) return;
+
+    // hide all dropdowns on load
     var allDrops = document.querySelectorAll(
       ".filter-dropdown,.price-dropdown,.location-dropdown",
     );
     for (var i = 0; i < allDrops.length; i++)
       allDrops[i].style.display = "none";
+
     allCards = Array.from(el.grid.querySelectorAll(CFG.CARD_SEL));
     if (!allCards.length) return;
+
     buildAreas();
     mountLocUI();
-    computeBaseBounds();
+    computeBaseBounds(); // initial bounds — may exclude non-IDR cards until rates load
     initPricePanel();
     injectDropdownCloseBtns();
     hydrateCoordsFromCMS();
     loadMapSDK(initMap);
     updateLocText();
-    bindEvents();
+    bindEvents(); // includes bhb:rates-ready listener for bounds recompute
     setCurrency("IDR");
     filtered = allCards.slice();
     showNext();
     updateUI();
   }
+
   if (document.readyState === "loading")
     document.addEventListener("DOMContentLoaded", init);
   else init();
