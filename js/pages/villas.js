@@ -391,6 +391,7 @@
   function bindEvents() {
     initSingle(el.ownershipField, function (val) {
       state.ownership = val;
+      updatePriceRangeForOwnership();
       applyFilters();
     });
     initMulti(el.bedsField, function (selected) {
@@ -744,6 +745,108 @@
         : sym + short(minV) + " \u2013 " + sym + short(maxV);
     }
   }
+  function getCardsByOwnership(cards, ownership) {
+    if (ownership === "Any") {
+      return cards;
+    }
+    var ownershipLower = ownership.toLowerCase();
+    return cards.filter(function (card) {
+      var d = getData(card);
+      return d.ownership === ownershipLower;
+    });
+  }
+
+  function calculatePriceRange(cards) {
+    var min = Infinity;
+    var max = 0;
+    for (var i = 0; i < cards.length; i++) {
+      var d = getData(cards[i]);
+      if (!d.price || d.price <= 0) continue;
+      if (d.price < min) min = d.price;
+      if (d.price > max) max = d.price;
+    }
+    return {
+      min: min === Infinity ? 0 : min,
+      max: max === 0 ? 1000000 : max,
+    };
+  }
+
+  function updatePriceRangeForOwnership() {
+    var matchingCards = getCardsByOwnership(allCards, state.ownership);
+    var range = calculatePriceRange(matchingCards);
+
+    slider.base.min = range.min;
+    slider.base.max = range.max;
+    slider.active.min = range.min;
+    slider.active.max = range.max;
+    slider.minRatio = 0;
+    slider.maxRatio = 1;
+
+    // Update slider scale labels
+    var scaleMin = document.getElementById("pwScaleMin");
+    var scaleMax = document.getElementById("pwScaleMax");
+    if (scaleMin) scaleMin.textContent = symFor(state.currency) + short(range.min);
+    if (scaleMax) scaleMax.textContent = symFor(state.currency) + short(range.max);
+
+    // Re-render the slider UI
+    var fillEl = document.getElementById("pwFill");
+    if (fillEl) {
+      fillEl.style.left = "0%";
+      fillEl.style.width = "100%";
+
+      var sw = document.querySelector(".pw-slider");
+      if (sw) {
+        sw.style.setProperty("--thumb-min", "0%");
+        sw.style.setProperty("--thumb-max", "100%");
+      }
+
+      // Update text inputs
+      var minText = document.getElementById("pwMinText");
+      var maxText = document.getElementById("pwMaxText");
+      if (minText)
+        minText.value = Number(range.min).toLocaleString("en-US", {
+          maximumFractionDigits: 0,
+        });
+      if (maxText)
+        maxText.value = Number(range.max).toLocaleString("en-US", {
+          maximumFractionDigits: 0,
+        });
+
+      // Update price trigger text
+      if (el.priceTrigText) {
+        el.priceTrigText.textContent =
+          symFor(state.currency) +
+          short(range.min) +
+          " \u2013 " +
+          symFor(state.currency) +
+          short(range.max);
+      }
+
+      // Update range text display
+      var rangeText = document.getElementById("pwRangeText");
+      if (rangeText) {
+        rangeText.textContent =
+          symFor(state.currency) +
+          short(range.min) +
+          " \u2013 " +
+          symFor(state.currency) +
+          short(range.max);
+      }
+
+      // Update native inputs
+      var nativeMin = document.getElementById("pwMin");
+      var nativeMax = document.getElementById("pwMax");
+      if (nativeMin) nativeMin.value = String(range.min);
+      if (nativeMax) nativeMax.value = String(range.max);
+    }
+
+    // Hide chips for villas (dynamic range, no presets)
+    var chips = document.querySelectorAll(".pw-chip");
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].style.display = "none";
+    }
+  }
+
   function updateChips(currency) {
     var c = normCurrency(currency);
     var presets = CHIP_PRESETS[c] || CHIP_PRESETS["IDR"];
@@ -1403,6 +1506,7 @@
     mountLocUI();
     computeBaseBounds();
     initPricePanel();
+    updatePriceRangeForOwnership();
     injectDropdownCloseBtns();
     hydrateCoordsFromCMS();
     loadMapSDK(initMap);
