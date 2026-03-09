@@ -1,84 +1,51 @@
-# bhb-webflow-filters
+# BHB Webflow Filters
 
-Custom JavaScript filters for the [Bali Home Base](https://balihomebase.com) Webflow site. Three independent filter scripts — one per listings page — plus shared CSS.
+A modular, production-ready filtering system for Bali Home Base property listings. Three independent filters (Rentals, Villas, Land) with shared utilities, core logic, and a redesigned architecture for maintainability.
 
----
-
-## Files & Modular Structure
-
-The codebase has been refactored into a modular architecture for maintainability and code reuse:
-
-```
-js/
-  configs/               → Configuration per page
-    land-config.js       → Land page config (AREA_RULES, LOC_COORDS, CHIP_PRESETS)
-    rentals-config.js    → Rentals page config
-    villas-config.js     → Villas page config
-  
-  core/                  → Shared core logic
-    filter-engine.js     → Filter pipeline, pagination, dropdown helpers
-  
-  pages/                 → Page-specific implementations
-    land.js              → Land page script
-    rentals.js           → Rentals page script
-    villas.js            → Villas page script
-  
-  utils/                 → Shared utilities
-    currency.js          → Currency conversion, formatting, normalization
-    map.js               → Map initialization, markers, bounds
-
-css/
-  filter.css             → Shared styles
-```
-
-**Location Grouping** is defined in each config's `AREA_RULES`. All three now use the same area structure for consistency.
+- **Rentals**: Availability-aware rental property filter
+- **Villas**: Ownership-based villa filter with dynamic price ranges
+- **Land**: Land size and price-per-are calculations
 
 ---
 
-## CDN URLs (jsDelivr)
+## Quick Start
 
-Each page loads its config + core + page script in order:
+Add these scripts to your Webflow page (in order):
 
-**Rentals**
+### For Rentals Page
 ```html
+<!-- Config + Utils + Core → Page Script -->
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/configs/rentals-config.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/utils/currency.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/utils/map.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/core/filter-engine.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/pages/rentals.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/css/filter.css">
 ```
 
-**Villas**
+### For Villas Page
 ```html
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/configs/villas-config.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/utils/currency.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/utils/map.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/core/filter-engine.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/pages/villas.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/css/filter.css">
 ```
 
-**Lands**
+### For Land Page
 ```html
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/configs/land-config.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/utils/currency.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/utils/map.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/core/filter-engine.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/js/pages/land.js"></script>
-```
-
-**CSS (add to <head>)**
-```html
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/USERNAME/bhb-webflow-filters@main/css/filter.css">
 ```
-
+  
 Replace `USERNAME` with your GitHub username.
 
-> **Script order matters**: Config → Utils → Core → Page script. This ensures utilities and filter logic are available before the page script runs.
-
-> **Cache note:** jsDelivr caches aggressively. To bust cache after an update, use a version tag instead of `@main`:
-> `@v1.0.1` → bump the tag on each release.
-
----
+> **⚠️ Script order is critical**: Config → Utils → Core → Page. Utilities must load before the page script initializes.
 
 ## Features
 
