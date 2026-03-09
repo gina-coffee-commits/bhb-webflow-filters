@@ -9,19 +9,39 @@ var FILTER_PANEL = ".villas-filter_form-block";
 // ─── AREA RULES ──────────────────────────────────────────────────────────────
 var AREA_RULES = [
   {
-    id: "uluwatu-area",
-    label: "Uluwatu area",
-    keys: ["uluwatu", "ungasan", "pecatu"],
-  },
-  {
     id: "canggu-area",
     label: "Canggu area",
-    keys: ["canggu", "batu bolong", "dalung"],
+    keys: [
+      "canggu",
+      "pererenan",
+      "seseh",
+      "cemagi",
+      "buduk",
+      "kaba kaba",
+      "kaba-kaba",
+      "cepaka",
+      "tumbak bayuh",
+      "buwit",
+      "dalung"
+    ]
   },
   {
-    id: "pererenan-area",
-    label: "Pererenan area",
-    keys: ["pererenan", "tumbak bayuh", "buduk", "cemagi", "seseh"],
+    id: "uluwatu-area",
+    label: "Uluwatu area",
+    keys: [
+      "bingin",
+      "uluwatu",
+      "uluwatu center",
+      "ungasan"
+    ]
+  },
+  {
+    id: "ubud-area",
+    label: "Ubud area",
+    keys: [
+      "ubud",
+      "ubud center"
+    ]
   },
   {
     id: "tabanan-area",
@@ -29,14 +49,11 @@ var AREA_RULES = [
     keys: [
       "kedungu",
       "nyanyi",
-      "tanah lot",
-      "cepaka",
-      "buwit",
-      "kaba kaba",
-      "kaba-kaba",
-    ],
-  },
-  { id: "ubud-area", label: "Ubud area", keys: ["ubud"] },
+      "pandak gede",
+      "nyambu",
+      "tanah lot"
+    ]
+  }
 ];
 
 // ─── LOCATION COORDINATES ────────────────────────────────────────────────────

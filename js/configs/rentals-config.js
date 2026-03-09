@@ -7,10 +7,52 @@ var PIN_URL =
 
 // ─── area groupings for location filter ───────────────────────────────────
 var AREA_RULES = [
-  { id: 'uluwatu-area', label: 'Uluwatu area', keys: ['uluwatu', 'ungasan', 'pecatu'] },
-  { id: 'canggu-area',  label: 'Canggu area',  keys: ['canggu', 'batu bolong', 'dalung', 'pererenan', 'tumbak bayuh', 'buduk', 'cemagi', 'seseh'] },
-  { id: 'tabanan-area', label: 'Tabanan area', keys: ['kedungu', 'nyanyi', 'tanah lot', 'cepaka', 'buwit', 'kaba kaba', 'kaba-kaba'] },
-  { id: 'ubud-area',    label: 'Ubud area',    keys: ['ubud'] }
+  {
+    id: "canggu-area",
+    label: "Canggu area",
+    keys: [
+      "canggu",
+      "pererenan",
+      "seseh",
+      "cemagi",
+      "buduk",
+      "kaba kaba",
+      "kaba-kaba",
+      "cepaka",
+      "tumbak bayuh",
+      "buwit",
+      "dalung"
+    ]
+  },
+  {
+    id: "uluwatu-area",
+    label: "Uluwatu area",
+    keys: [
+      "bingin",
+      "uluwatu",
+      "uluwatu center",
+      "ungasan"
+    ]
+  },
+  {
+    id: "ubud-area",
+    label: "Ubud area",
+    keys: [
+      "ubud",
+      "ubud center"
+    ]
+  },
+  {
+    id: "tabanan-area",
+    label: "Tabanan area",
+    keys: [
+      "kedungu",
+      "nyanyi",
+      "pandak gede",
+      "nyambu",
+      "tanah lot"
+    ]
+  }
 ];
 
 // ─── map pin coordinates per location ─────────────────────────────────────
