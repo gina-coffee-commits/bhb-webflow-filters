@@ -5,7 +5,8 @@ var MAP_STYLE = "019c8e23-ebd1-7221-bd5f-20ae2dca2ab6";
 var PIN_URL =
   "https://cdn.prod.website-files.com/67344ae68adf4fc1f539002d/69a009335d3c16a421dd917a_Icon.svg";
 
-// ─── area groupings for location filter ───────────────────────────────────
+// ─── AREA RULES ──────────────────────────────────────────────────────────────
+
 var AREA_RULES = [
   {
     id: "canggu-area",
@@ -55,7 +56,7 @@ var AREA_RULES = [
   }
 ];
 
-// ─── map pin coordinates per location ─────────────────────────────────────
+// ─── LOCATION COORDINATES ────────────────────────────────────────────────────
 var LOC_COORDS = {
   'cepaka':       [115.14526, -8.59917],
   'kaba kaba':    [115.13919, -8.59345],
