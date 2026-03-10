@@ -23,14 +23,7 @@
   position: relative;
 }
 
-.location-dropdown,
-.price-dropdown {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
-  z-index: 9999;
-  display: none;
-}
+
 
 .location-dropdown.is-open,
 .price-dropdown.is-open {
