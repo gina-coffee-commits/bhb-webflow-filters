@@ -867,8 +867,3 @@
   }
 }
 
-@media (min-width: 992px) {
-  .location-dropdown {
-    overflow: hidden !important;
-  }
-}
