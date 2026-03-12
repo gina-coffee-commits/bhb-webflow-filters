@@ -868,14 +868,15 @@
 }
 
 @media (min-width: 992px) {
-  /* Override Webflow's inset/left/margin rules (base + 1280px breakpoint)
-     that push the panel off-center. Use left:50% + translateX(-50%) so
-     centering is independent of parent width and margin state. */
+  /* Fully explicit positioning — overrides all Webflow inset/margin values.
+     Mirrors the pattern: position:absolute; top:-Xpx; left:50%; transform:translateX(-50%) */
   html body .rent-filter_form-block {
+    position: absolute !important;
+    top: -140px !important;
     left: 50% !important;
     right: auto !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
+    bottom: auto !important;
+    margin: 0 !important;
     transform: translateX(-50%) !important;
   }
 
