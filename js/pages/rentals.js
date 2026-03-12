@@ -558,7 +558,7 @@
         else if (locDropOpen && map)
           setTimeout(function () {
             map.resize();
-          }, 80);
+          }, 250);
       });
     }
 
