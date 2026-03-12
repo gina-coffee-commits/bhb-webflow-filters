@@ -868,11 +868,16 @@
 }
 
 @media (min-width: 992px) {
+  /* Centered hero-overlap card — sits at the bottom of the hero, straddles into content */
   .rent-filter_form-block {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    inset: auto !important;
-    position: relative !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    top: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 auto !important;
+    transform: translateY(50%) !important;
+    z-index: 10 !important;
   }
 
   .location-dropdown {
