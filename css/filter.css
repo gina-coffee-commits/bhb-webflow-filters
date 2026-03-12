@@ -868,19 +868,33 @@
 }
 
 @media (min-width: 992px) {
-  /* Fully explicit positioning — overrides all Webflow inset/margin values.
-     Mirrors the pattern: position:absolute; top:-Xpx; left:50%; transform:translateX(-50%) */
+  /* Center via left:0 + right:0 + margin:auto on the absolute element.
+     NO transform — transform creates a stacking context that breaks
+     position:fixed descendants (location/price dropdowns on tablet). */
   html body .rent-filter_form-block {
     position: absolute !important;
     top: -140px !important;
-    left: 50% !important;
-    right: auto !important;
+    left: 0 !important;
+    right: 0 !important;
     bottom: auto !important;
-    margin: 0 !important;
-    transform: translateX(-50%) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    transform: none !important;
   }
 
   .location-dropdown {
     overflow: hidden !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  /* Webflow's own 1280px breakpoint sets left:150px + margin:0, breaking centering.
+     Re-assert margin:auto here to override it. Specificity (html body prefix)
+     beats Webflow's selector; !important beats any non-!important rule. */
+  html body .rent-filter_form-block {
+    left: 0 !important;
+    right: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 }
