@@ -866,3 +866,16 @@
     height: 180px !important;
   }
 }
+
+@media (min-width: 992px) {
+  .rent-filter_form-block {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    inset: auto !important;
+    position: relative !important;
+  }
+
+  .location-dropdown {
+    overflow: hidden !important;
+  }
+}
