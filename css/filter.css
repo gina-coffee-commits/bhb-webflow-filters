@@ -34,44 +34,20 @@
   z-index: 1000;
 }
 
-#bhb-filter .rent-filter_items {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-/* Row 1: 4 equal columns */
-#bhb-filter .rent-filter_top {
+/* ── Single 4-col grid for all fields ── */
+#bhb-filter .rent-filter_grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0 32px;
-  align-items: end;
-  margin-bottom: 24px;
+  gap: 4px;
+  margin-bottom: 10px;
 }
 
-/* Divider — hidden, rows separated by margin */
-#bhb-filter .rent-filter_divider {
-  display: none;
-}
-
-/* Row 2: price wider, currency, then buttons */
-#bhb-filter .rent-filter_bottom {
-  display: grid;
-  grid-template-columns: 1.6fr 0.8fr auto;
-  gap: 0 32px;
-  align-items: end;
-}
-
-/* No longer used but kept for safety */
-#bhb-filter .rent-filter_bottom-left {
-  display: contents;
-}
-
-#bhb-filter .rent-filter_bottom-right {
+/* ── Actions row below grid ── */
+#bhb-filter .rent-filter_actions {
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
   gap: 10px;
-  align-items: flex-end;
-  flex-shrink: 0;
 }
 
 /* ── Filter field ── */
@@ -79,6 +55,11 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  padding: 10px;
+}
+
+#bhb-filter .filter-field.is-price {
+  grid-column: span 2;
 }
 
 #bhb-filter .filter-label {
@@ -97,11 +78,12 @@
 #bhb-filter .price-trigger {
   display: flex;
   align-items: center;
-  height: 38px;
-  padding: 0 2px 6px;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 0;
   background: transparent;
   border: none;
-  border-bottom: 1.5px solid #d0cac3;
+  border-bottom: 1.5px solid #1a1412;
   border-radius: 0;
   cursor: pointer;
   transition: border-color 0.15s;
@@ -111,13 +93,20 @@
 #bhb-filter .filter-trigger:hover,
 #bhb-filter .location-trigger:hover,
 #bhb-filter .price-trigger:hover {
-  border-bottom-color: #a09890;
+  border-bottom-color: #b0703b;
 }
 
 #bhb-filter .filter-trigger.is-active,
 #bhb-filter .location-trigger.is-active,
 #bhb-filter .price-trigger.is-active {
   border-bottom-color: #b0703b;
+}
+
+/* ── Trigger value wrapper ── */
+#bhb-filter .filter-trigger_value {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 16px;
 }
 
 #bhb-filter .filter-trigger_text,
@@ -129,7 +118,20 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
+}
+
+/* ── Chevron — hidden until hover ── */
+#bhb-filter .trigger-chevron {
+  display: none;
+  flex-shrink: 0;
+  color: #1a1412;
+  align-items: center;
+}
+
+#bhb-filter .filter-trigger:hover .trigger-chevron,
+#bhb-filter .location-trigger:hover .trigger-chevron,
+#bhb-filter .price-trigger:hover .trigger-chevron {
+  display: flex;
 }
 
 /* ── Keyword input inside trigger ── */
@@ -148,6 +150,7 @@
   font-weight: 400;
   color: #3a3530;
   font-family: inherit;
+  padding: 0;
 }
 
 #bhb-filter .keyword-input::placeholder {
@@ -909,24 +912,12 @@
     inset: -100px 0% auto;
   }
 
-  #bhb-filter .rent-filter_top {
+  #bhb-filter .rent-filter_grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px 20px;
-    margin-bottom: 20px;
   }
 
-  #bhb-filter .rent-filter_bottom {
-    grid-template-columns: 1fr 1fr;
-    gap: 20px 20px;
-  }
-
-  #bhb-filter .rent-filter_bottom-right {
-    grid-column: 1 / -1;
-    justify-content: flex-end;
-  }
-
-  #bhb-filter .filter-field {
-    min-width: 0;
+  #bhb-filter .filter-field.is-price {
+    grid-column: span 2;
   }
 
   #bhb-filter .location-col.is-right {
@@ -1028,14 +1019,12 @@
     border-radius: 18px;
   }
 
-  #bhb-filter .rent-filter_top {
+  #bhb-filter .rent-filter_grid {
     grid-template-columns: 1fr 1fr;
-    gap: 18px 16px;
   }
 
-  #bhb-filter .rent-filter_bottom {
-    grid-template-columns: 1fr 1fr;
-    gap: 18px 16px;
+  #bhb-filter .filter-field.is-price {
+    grid-column: span 2;
   }
 
   #bhb-filter .location-dropdown,
@@ -1080,6 +1069,14 @@
    ========================================================================== */
 
 @media (max-width: 479px) {
+
+  #bhb-filter .rent-filter_grid {
+    grid-template-columns: 1fr;
+  }
+
+  #bhb-filter .filter-field.is-price {
+    grid-column: span 1;
+  }
 
   #bhb-filter .price-panel {
     padding: 16px;

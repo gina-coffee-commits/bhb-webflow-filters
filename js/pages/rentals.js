@@ -1635,6 +1635,7 @@ function buildAreas() {
     if (!root) return;
 
     var CLOSE_SVG = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1L13 13M13 1L1 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+    var CHEVRON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
 
     function mk(tag, attrs, children) {
       var e = document.createElement(tag);
@@ -1661,7 +1662,10 @@ function buildAreas() {
 
     function makeTrigger(text) {
       return mk('div', { class: 'filter-trigger' }, [
-        mk('div', { class: 'filter-trigger_text', text: text })
+        mk('div', { class: 'filter-trigger_value' }, [
+          mk('div', { class: 'filter-trigger_text', text: text })
+        ]),
+        mk('div', { class: 'trigger-chevron', html: CHEVRON_SVG })
       ]);
     }
 
@@ -1759,7 +1763,10 @@ function buildAreas() {
     ]);
 
     var locTrigger = mk('div', { class: 'location-trigger' }, [
-      mk('div', { class: 'location-trigger_text', text: 'All Location' })
+      mk('div', { class: 'filter-trigger_value' }, [
+        mk('div', { class: 'location-trigger_text', text: 'All Location' })
+      ]),
+      mk('div', { class: 'trigger-chevron', html: CHEVRON_SVG })
     ]);
 
     var locField = makeField([
@@ -1821,7 +1828,10 @@ function buildAreas() {
     ]);
 
     var priceTrigText = mk('div', { class: 'price-trigger_text', text: 'Price Range' });
-    var priceTrigger  = mk('div', { class: 'price-trigger' }, [priceTrigText]);
+    var priceTrigger  = mk('div', { class: 'price-trigger' }, [
+      mk('div', { class: 'filter-trigger_value' }, [priceTrigText]),
+      mk('div', { class: 'trigger-chevron', html: CHEVRON_SVG })
+    ]);
 
     var priceField = makeField([
       makeLabel('Price'),
@@ -1851,18 +1861,17 @@ function buildAreas() {
     var btnSearch = mk('a', { href: '#', class: 'filter-button-2', text: 'Search Properties' });
 
     // ── Assemble ──
+    priceField.classList.add('is-price');
+
     var filterForm = mk('div', { class: 'rent-filter_form' }, [
       formCloseBtn,
-      mk('div', { class: 'rent-filter_items' }, [
-        mk('div', { class: 'rent-filter_top' }, [bedsField, availField, kwField, locField]),
-        mk('div', { class: 'rent-filter_bottom' }, [
-          priceField,
-          currField,
-          mk('div', { class: 'rent-filter_bottom-right' }, [
-            mk('div', { class: 'filter-button-style-1' }, [btnClear]),
-            mk('div', { class: 'filter-button-style-1 dark-btn' }, [btnSearch])
-          ])
-        ])
+      mk('div', { class: 'rent-filter_grid' }, [
+        bedsField, availField, kwField, locField,
+        priceField, currField
+      ]),
+      mk('div', { class: 'rent-filter_actions' }, [
+        mk('div', { class: 'filter-button-style-1' }, [btnClear]),
+        mk('div', { class: 'filter-button-style-1 dark-btn' }, [btnSearch])
       ])
     ]);
 
