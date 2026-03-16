@@ -1886,7 +1886,6 @@ function buildAreas() {
     var btnSearch = mk('a', { href: '#', class: 'filter-button-2', text: 'Search Properties' });
 
     // ── Assemble ──
-    priceField.classList.add('is-price');
 
     // ── Mobile collapsed card (≤991px) ──
     var mobileCollapsed = mk('div', { class: 'bhb-mobile-collapsed' }, [
@@ -1899,13 +1898,18 @@ function buildAreas() {
     var filterForm = mk('div', { class: 'rent-filter_form' }, [
       formCloseBtn,
       mobileCollapsed,
-      mk('div', { class: 'rent-filter_grid' }, [
-        bedsField, availField, kwField, locField,
-        priceField, currField
+      mk('div', { class: 'rent-filter_top' }, [
+        bedsField, availField, kwField, locField
       ]),
-      mk('div', { class: 'rent-filter_actions' }, [
-        mk('div', { class: 'filter-button-style-1' }, [btnClear]),
-        mk('div', { class: 'filter-button-style-1 dark-btn' }, [btnSearch])
+      mk('div', { class: 'rent-filter_divider' }),
+      mk('div', { class: 'rent-filter_bottom' }, [
+        mk('div', { class: 'rent-filter_bottom-fields' }, [
+          priceField, currField
+        ]),
+        mk('div', { class: 'rent-filter_actions' }, [
+          mk('div', { class: 'filter-button-style-1' }, [btnClear]),
+          mk('div', { class: 'filter-button-style-1 dark-btn' }, [btnSearch])
+        ])
       ])
     ]);
 
