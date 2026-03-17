@@ -100,7 +100,10 @@
   var locDropOpen = false,
     map = null,
     mapReady = false,
-    markers = [];
+    markers = [],
+    locMap = null,
+    locMapReady = false,
+    locMapMarkers = [];
   var areas = [],
     draftLocs = [],
     labelByNorm = {};
@@ -545,11 +548,12 @@
         e.stopPropagation();
         closeAll(el.locDropdown);
         openLocDrop();
-        if (locDropOpen && !map) loadMapSDK(initMap);
-        else if (locDropOpen && map)
-          setTimeout(function () {
-            map.resize();
-          }, 250);
+        if (locDropOpen) {
+          if (!map) loadMapSDK(initMap);
+          else setTimeout(function () { map.resize(); }, 250);
+          if (!locMap) loadMapSDK(initLocMap);
+          else setTimeout(function () { locMap.resize(); }, 250);
+        }
       });
     }
 
@@ -1344,17 +1348,6 @@ function buildAreas() {
       }
     }
 
-    // ── SVG map region click handlers (area-level) ──
-    var svgEl = el.locDropdown.querySelector('.bali-svg-map');
-    if (svgEl) {
-      var areaRegions = svgEl.querySelectorAll('.bali-area-region');
-      for (var r = 0; r < areaRegions.length; r++) {
-        areaRegions[r].addEventListener('click', (function(aId) {
-          return function() { toggleArea(aId); };
-        })(areaRegions[r].getAttribute('data-area')));
-      }
-    }
-
     // ── Tab switching ──
     var tabAreaBtn  = el.locDropdown.querySelector('.loc-tab-area');
     var tabMapsBtn  = el.locDropdown.querySelector('.loc-tab-maps');
@@ -1366,6 +1359,7 @@ function buildAreas() {
         if (tabMapsBtn) tabMapsBtn.classList.add('is-active');
         if (panelArea)  panelArea.classList.remove('is-active');
         if (panelMaps)  panelMaps.classList.add('is-active');
+        setTimeout(function() { if (locMap) locMap.resize(); }, 50);
       } else {
         if (tabMapsBtn) tabMapsBtn.classList.remove('is-active');
         if (tabAreaBtn) tabAreaBtn.classList.add('is-active');
@@ -1382,6 +1376,7 @@ function buildAreas() {
         draftLocs = [];
         renderLocLists();
         syncMapWith(draftLocs);
+        syncLocMapMarkers(draftLocs);
         updateDraftInfo();
       });
     }
@@ -1457,7 +1452,7 @@ function buildAreas() {
     else draftLocs.push(loc);
     renderLocLists();
     syncMapWith(draftLocs);
-    syncSvgMap(draftLocs);
+    syncLocMapMarkers(draftLocs);
   }
 
   function toggleArea(areaId) {
@@ -1484,7 +1479,7 @@ function buildAreas() {
     }
     renderLocLists();
     syncMapWith(draftLocs);
-    syncSvgMap(draftLocs);
+    syncLocMapMarkers(draftLocs);
   }
 
   function updateDraftInfo() {
@@ -1522,13 +1517,14 @@ function buildAreas() {
       if (locUI.searchInput) locUI.searchInput.value = "";
       renderLocLists();
       syncMapWith(draftLocs);
+      syncLocMapMarkers(draftLocs);
     }
     el.locDropdown.style.display = locDropOpen ? "block" : "none";
     el.locDropdown.classList.toggle("is-open", locDropOpen);
-    if (locDropOpen && map)
-      setTimeout(function () {
-        map.resize();
-      }, 80);
+    if (locDropOpen) {
+      if (map) setTimeout(function () { map.resize(); }, 80);
+      if (locMap) setTimeout(function () { locMap.resize(); }, 80);
+    }
     if (!locDropOpen) syncMapWith(state.locations);
   }
 
@@ -1573,6 +1569,60 @@ function buildAreas() {
         map.resize();
       }, 80);
     });
+  }
+
+  function initLocMap() {
+    if (locMap) return;
+    var mapEl = document.getElementById('locMapEl');
+    if (!mapEl || !window.maptilersdk) return;
+    maptilersdk.config.apiKey = MAPTILER_KEY;
+    locMap = new maptilersdk.Map({
+      container: 'locMapEl',
+      style: MAP_STYLE,
+      center: [115.1889, -8.4095],
+      zoom: 9.3,
+      attributionControl: false,
+    });
+    locMap.on('load', function () {
+      locMapReady = true;
+      syncLocMapMarkers(draftLocs);
+      setTimeout(function () { locMap.resize(); }, 80);
+    });
+  }
+
+  function syncLocMapMarkers(locations) {
+    if (!locMap || !locMapReady) return;
+    for (var i = 0; i < locMapMarkers.length; i++) locMapMarkers[i].remove();
+    locMapMarkers = [];
+    var pts = [], seen = {};
+    for (var i = 0; i < locations.length; i++) {
+      var p = LOC_COORDS[locations[i]];
+      if (!p) continue;
+      var key = p[0] + ',' + p[1];
+      if (!seen[key]) {
+        seen[key] = true;
+        pts.push({ p: p, loc: locations[i] });
+      }
+    }
+    if (!pts.length) {
+      locMap.flyTo({ center: [115.1889, -8.4095], zoom: 9.3, duration: 450 });
+      return;
+    }
+    for (var i = 0; i < pts.length; i++) {
+      var label = (labelByNorm[pts[i].loc] || pts[i].loc).replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+      locMapMarkers.push(
+        new maptilersdk.Marker({ element: makePin(label), anchor: 'bottom' })
+          .setLngLat(pts[i].p)
+          .addTo(locMap)
+      );
+    }
+    if (pts.length === 1) {
+      locMap.flyTo({ center: pts[0].p, zoom: 12.2, duration: 450 });
+      return;
+    }
+    var bounds = new maptilersdk.LngLatBounds();
+    for (var i = 0; i < pts.length; i++) bounds.extend(pts[i].p);
+    locMap.fitBounds(bounds, { padding: 60, maxZoom: 13, duration: 450 });
   }
 
   function clearMarkers() {
