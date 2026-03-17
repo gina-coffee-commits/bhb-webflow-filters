@@ -1880,6 +1880,10 @@ function buildAreas() {
 
     // ── Form close (mobile) ──
     var formCloseBtn = mk('div', { class: 'close-btn', html: CLOSE_SVG });
+    var mobileHeader = mk('div', { class: 'bhb-mobile-header' }, [
+      mk('div', { class: 'bhb-mobile-header-title', text: 'Search' }),
+      formCloseBtn
+    ]);
 
     // ── Action buttons ──
     var btnClear  = mk('a', { href: '#', class: 'filter-button-1', text: 'Clear' });
@@ -1896,15 +1900,15 @@ function buildAreas() {
     ]);
 
     var filterForm = mk('div', { class: 'rent-filter_form' }, [
-      formCloseBtn,
+      mobileHeader,
       mobileCollapsed,
       mk('div', { class: 'rent-filter_top' }, [
-        bedsField, availField, kwField, locField
+        bedsField, availField, kwField
       ]),
       mk('div', { class: 'rent-filter_divider' }),
       mk('div', { class: 'rent-filter_bottom' }, [
         mk('div', { class: 'rent-filter_bottom-fields' }, [
-          priceField, currField
+          locField, priceField, currField
         ]),
         mk('div', { class: 'rent-filter_actions' }, [
           mk('div', { class: 'filter-button-style-1' }, [btnClear]),
