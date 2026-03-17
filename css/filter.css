@@ -21,7 +21,7 @@
 /* ── Form layout ── */
 #bhb-filter .rent-filter_form {
   position: absolute;
-  inset: -140px 0% auto;
+  inset: -261px 0% auto;
   width: 90%;
   min-width: auto;
   max-width: 1000px;
@@ -68,6 +68,7 @@
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+  flex-direction: column;
 }
 
 /* ── Filter field ── */
@@ -970,13 +971,9 @@
 
 @media (max-width: 991px) {
 
-  /* Reset card to normal in-flow position — shows compact card */
+  /* Keep card floating in hero on tablet/mobile */
   #bhb-filter .rent-filter_form {
-    position: relative;
-    inset: auto;
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
+    width: 92%;
     padding: 24px 20px;
     border-radius: 16px;
   }
