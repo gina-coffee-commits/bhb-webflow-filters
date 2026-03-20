@@ -397,6 +397,12 @@
   color: #fff;
 }
 
+/* ── Location body — column on mobile, row on desktop ── */
+#bhb-filter .loc-body {
+  display: flex;
+  flex-direction: column;
+}
+
 /* ── Location panels ── */
 #bhb-filter .loc-panel-area,
 #bhb-filter .loc-panel-maps {
@@ -1101,58 +1107,47 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE — tablet (≤ 991px)
+   RESPONSIVE — tablet / mobile (≤ 991px)
    ========================================================================== */
 
 @media (max-width: 991px) {
 
-  /* Keep card floating in hero on tablet/mobile */
+  /* Compact floating card */
   #bhb-filter .rent-filter_form {
-    inset: -170px 0% auto;
+    inset: -120px 0% auto;
     width: 92%;
-    padding: 24px 20px;
-    border-radius: 16px;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0px 16px 48px 0px rgba(58, 46, 40, 0.18);
   }
 
-  /* Show compact view, hide full filter */
-  #bhb-filter .bhb-mobile-collapsed {
-    display: block;
-  }
+  /* Show compact search bar, hide full filter rows */
+  #bhb-filter .bhb-mobile-collapsed { display: block; }
+  #bhb-filter .rent-filter_top      { display: none; }
+  #bhb-filter .rent-filter_divider  { display: none; }
+  #bhb-filter .rent-filter_bottom   { display: none; }
 
-  #bhb-filter .rent-filter_top {
-    display: none;
-  }
-
-  #bhb-filter .rent-filter_divider {
-    display: none;
-  }
-
-  #bhb-filter .rent-filter_bottom {
-    display: none;
-  }
-
-  /* ── Bottom sheet when opened ── */
+  /* ── Bottom sheet when open ── */
   #bhb-filter .rent-filter_form.is-mobile-open {
     position: fixed;
     inset: auto 0 0;
     width: 100%;
     max-width: 100%;
     margin: 0;
-    border-radius: 20px 20px 0 0;
+    border-radius: 24px 24px 0 0;
     max-height: 92vh;
     overflow-y: auto;
-    padding: 20px 20px 32px;
+    padding: 20px 20px 36px;
     z-index: 1000;
     animation: bhbSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
   }
 
-  /* ── Mobile header ── */
+  /* Mobile header */
   #bhb-filter .bhb-mobile-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding-bottom: 16px;
-    margin-bottom: 4px;
     border-bottom: 1px solid #f0ece8;
     position: sticky;
     top: -20px;
@@ -1176,63 +1171,70 @@
     display: none;
   }
 
-  /* ── Fields as vertical list ── */
+  /* ── All filter rows show as vertical lists ── */
   #bhb-filter .rent-filter_form.is-mobile-open .rent-filter_top {
     display: flex;
     flex-direction: column;
-    margin-bottom: 0;
-  }
-
-  #bhb-filter .rent-filter_form.is-mobile-open .rent-filter_divider {
-    display: none;
+    gap: 0;
+    padding: 0;
+    border-bottom: none;
   }
 
   #bhb-filter .rent-filter_form.is-mobile-open .rent-filter_bottom {
     display: flex;
     flex-direction: column;
-    align-items: stretch;
     gap: 0;
+    padding: 0;
   }
 
   #bhb-filter .rent-filter_form.is-mobile-open .rent-filter_bottom-fields {
-    display: flex;
     flex-direction: column;
+    gap: 0;
   }
 
-  /* ── Each field as a full-width list row ── */
+  /* Each field = full-width list row */
   #bhb-filter .rent-filter_form.is-mobile-open .filter-field {
-    padding: 14px 0;
+    width: 100% !important;
+    padding: 12px 0;
     border-bottom: 1px solid #f0ece8;
-    gap: 2px;
+    gap: 4px;
+  }
+
+  /* Reset per-field fixed widths on mobile */
+  #bhb-filter .rent-filter_form.is-mobile-open .filter-field:has(.keyword-input),
+  #bhb-filter .rent-filter_form.is-mobile-open .filter-field:has(.location-trigger),
+  #bhb-filter .rent-filter_form.is-mobile-open .filter-field:has(.price-trigger-wrapper),
+  #bhb-filter .rent-filter_form.is-mobile-open .filter-field:has(.filter-option[data-value="IDR"]) {
+    width: 100% !important;
   }
 
   #bhb-filter .rent-filter_form.is-mobile-open .filter-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #1a1412;
-    margin-bottom: 2px;
+    font-size: 11px;
+    color: #78716c;
+    height: auto;
   }
 
-  /* ── Flat trigger — no box ── */
+  /* Flat trigger — no outlined box on mobile */
   #bhb-filter .rent-filter_form.is-mobile-open .filter-trigger,
   #bhb-filter .rent-filter_form.is-mobile-open .location-trigger,
   #bhb-filter .rent-filter_form.is-mobile-open .price-trigger {
     background: transparent;
+    outline: none;
     border: none;
     border-radius: 0;
     height: auto;
     padding: 0;
-    box-sizing: border-box;
   }
 
   #bhb-filter .rent-filter_form.is-mobile-open .filter-trigger_text,
   #bhb-filter .rent-filter_form.is-mobile-open .location-trigger_text,
   #bhb-filter .rent-filter_form.is-mobile-open .price-trigger_text {
-    font-size: 13px;
-    color: #888078;
+    font-size: 15px;
+    color: #1a1412;
+    font-weight: 500;
   }
 
-  /* ── Dropdowns expand inline ── */
+  /* Dropdowns expand inline in bottom sheet */
   #bhb-filter .rent-filter_form.is-mobile-open .filter-dropdown,
   #bhb-filter .rent-filter_form.is-mobile-open .location-dropdown,
   #bhb-filter .rent-filter_form.is-mobile-open .price-dropdown {
@@ -1244,41 +1246,40 @@
     box-shadow: none;
     border-radius: 12px;
     background: #f9f7f5;
-    margin-top: 10px;
+    margin-top: 8px;
     overflow: visible;
-    padding: 16px;
+    padding: 12px;
   }
 
   #bhb-filter .rent-filter_form.is-mobile-open .price-panel {
     width: 100%;
-    padding: 12px 0 0;
+    padding: 8px 0 0;
   }
 
-  /* ── Location panels on mobile (inline expand) ── */
+  /* Location panels */
   #bhb-filter .rent-filter_form.is-mobile-open .loc-panel-area {
     height: auto;
-    max-height: 220px;
+    max-height: 200px;
   }
 
   #bhb-filter .rent-filter_form.is-mobile-open .bali-map-wrap {
-    height: 220px;
+    height: 200px;
   }
 
-  /* ── Actions row ── */
+  /* Actions row — side by side on mobile */
   #bhb-filter .rent-filter_form.is-mobile-open .rent-filter_actions {
-    display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: stretch;
     gap: 10px;
-    padding-top: 16px;
-    border-top: none;
+    padding: 16px 0 0;
   }
 
   #bhb-filter .rent-filter_form.is-mobile-open .filter-button-1,
   #bhb-filter .rent-filter_form.is-mobile-open .filter-button-2 {
-    flex: 1;
-    padding: 10px 20px;
-    font-size: 14px;
+    flex: 1 !important;
+    justify-content: center !important;
+    padding: 12px 16px !important;
+    font-size: 15px !important;
   }
 
   #bhb-filter .tree-scroll {
@@ -1399,40 +1400,24 @@
 
 @media (max-width: 479px) {
 
-  #bhb-filter .rent-filter_form.is-mobile-open .rent-filter_top {
-    grid-template-columns: 1fr;
-  }
-
-  #bhb-filter .rent-filter_form.is-mobile-open .rent-filter_bottom-fields {
-    grid-template-columns: 1fr 1fr;
+  #bhb-filter .rent-filter_form {
+    inset: -90px 0% auto;
+    width: 94%;
+    padding: 16px;
   }
 
   #bhb-filter .price-panel {
-    padding: 16px;
+    padding: 12px 0 0;
     gap: 14px;
   }
 
   #bhb-filter .pw-chip {
     flex: 1 1 calc(50% - 6px);
+    font-size: 12px;
   }
 
   #bhb-filter .pw-rows {
     grid-template-columns: 1fr;
-  }
-
-  #bhb-filter .pill-scroll {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    max-height: unset;
-    padding-bottom: 4px;
-    gap: 8px;
-  }
-
-  #bhb-filter .pill {
-    flex-shrink: 0;
-    white-space: nowrap;
   }
 
   #bhb-filter .loc-actions {
