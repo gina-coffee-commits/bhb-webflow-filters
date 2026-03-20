@@ -24,51 +24,57 @@
   inset: -261px 0% auto;
   width: 90%;
   min-width: auto;
-  max-width: 1000px;
+  max-width: 1232px;
   margin: 0 auto;
   margin-bottom: 0;
   padding: 20px 32px;
   background-color: #fff;
   border-radius: 24px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 30px 90px 0px rgba(58, 46, 40, 0.25);
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ── Row 1: 3-col field grid ── */
+/* ── Row 1: top fields ── */
 #bhb-filter .rent-filter_top {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  margin-bottom: 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(214, 211, 209, 0.5);
 }
 
 /* ── Divider between rows ── */
 #bhb-filter .rent-filter_divider {
-  border-top: 1px solid #000;
-  margin: 4px 0 8px;
+  display: none;
 }
 
-/* ── Row 2: fields + actions inline ── */
+/* ── Row 2: bottom fields + actions ── */
 #bhb-filter .rent-filter_bottom {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: 20px;
+  padding: 10px 0;
 }
 
 #bhb-filter .rent-filter_bottom-fields {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
-  gap: 4px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 20px;
 }
 
-/* ── Actions (buttons) ── */
+/* ── Actions (buttons — stacked vertically) ── */
 #bhb-filter .rent-filter_actions {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
   flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  flex-shrink: 0;
 }
 
 /* ── Filter field ── */
@@ -76,20 +82,30 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 10px;
+  gap: 10px;
+  flex-shrink: 0;
 }
+
+/* Per-field widths */
+#bhb-filter .filter-field:has(.keyword-input)        { width: 384px; }
+#bhb-filter .filter-field:has(.location-trigger)    { width: 288px; }
+#bhb-filter .filter-field:has(.price-trigger-wrapper){ width: 384px; }
+#bhb-filter .filter-field:has(.filter-option[data-value="IDR"]) { width: 208px; }
 
 #bhb-filter .filter-label {
-  font-size: 14px;
-  font-weight: 400;
-  color: #27272a;
-  text-transform: none;
-  letter-spacing: 0;
-  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #404040;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 16px;
   white-space: nowrap;
+  height: 16px;
+  display: flex;
+  align-items: center;
 }
 
-/* ── Trigger buttons — boxed style ── */
+/* ── Trigger buttons — outlined pill style ── */
 #bhb-filter .filter-trigger,
 #bhb-filter .location-trigger,
 #bhb-filter .price-trigger {
@@ -97,13 +113,15 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  height: 40px;
-  padding: 0 11px;
-  background: #f4f4f5;
-  border: 1px solid #78716c;
-  border-radius: 8px;
+  height: 56px;
+  padding: 0 20px;
+  background: transparent;
+  border: none;
+  outline: 1px solid rgba(120, 113, 108, 0.5);
+  outline-offset: -1px;
+  border-radius: 16px;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: outline-color 0.15s, background 0.15s;
   user-select: none;
   box-sizing: border-box;
 }
@@ -111,15 +129,15 @@
 #bhb-filter .filter-trigger:hover,
 #bhb-filter .location-trigger:hover,
 #bhb-filter .price-trigger:hover {
-  border-color: #44403c;
-  background: #efefef;
+  outline-color: rgba(120, 113, 108, 0.8);
+  background: #fafaf9;
 }
 
 #bhb-filter .filter-trigger.is-active,
 #bhb-filter .location-trigger.is-active,
 #bhb-filter .price-trigger.is-active {
-  border-color: #44403c;
-  background: #efefef;
+  outline-color: #44403c;
+  background: #fafaf9;
 }
 
 /* ── Trigger value wrapper ── */
@@ -127,14 +145,17 @@
   flex: 1;
   min-width: 0;
   padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 #bhb-filter .filter-trigger_text,
 #bhb-filter .location-trigger_text,
 #bhb-filter .price-trigger_text {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 400;
-  color: #888078;
+  color: #a8a29e;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -144,9 +165,9 @@
 #bhb-filter .trigger-chevron {
   display: flex;
   flex-shrink: 0;
-  color: #78716c;
+  color: #404040;
   align-items: center;
-  margin-left: 6px;
+  margin-left: 8px;
 }
 
 /* ── Keyword input inside trigger ── */
@@ -161,7 +182,7 @@
   outline: none;
   background: transparent;
   width: 100%;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 400;
   color: #3a3530;
   font-family: inherit;
@@ -169,7 +190,7 @@
 }
 
 #bhb-filter .keyword-input::placeholder {
-  color: #888078;
+  color: #a8a29e;
   font-weight: 400;
 }
 
@@ -181,10 +202,10 @@
 }
 
 #bhb-filter .price-note {
-  font-size: 9px;
-  color: #71717a;
-  margin-top: 4px;
-  line-height: 1.3;
+  font-size: 12px;
+  color: #000;
+  font-weight: 400;
+  line-height: 1.4;
 }
 
 /* ── Generic filter dropdown (bedrooms, availability, currency) ── */
@@ -933,45 +954,55 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 40px;
-  padding: 0 20px;
-  border-radius: 20px;
-  border: 1.5px solid rgba(120, 113, 108, 0.5);
-  background: #fff;
+}
+
+/* Clear button */
+#bhb-filter .filter-button-1 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 32px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.6);
+  outline: 1px solid rgba(120, 113, 108, 0.5);
+  outline-offset: -1px;
+  box-shadow: 0px 8px 24px -4px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  font-weight: 500;
+  color: #404040;
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
-  text-decoration: none;
-  transition: background 0.12s, border-color 0.12s;
-  white-space: nowrap;
-  box-sizing: border-box;
+  transition: outline-color 0.12s, background 0.12s;
 }
 
-#bhb-filter .filter-button-1,
+#bhb-filter .filter-button-1:hover {
+  background: rgba(255, 255, 255, 0.9);
+  outline-color: rgba(120, 113, 108, 0.8);
+}
+
+/* Search button */
 #bhb-filter .filter-button-2 {
-  font-size: 13px;
-  font-weight: 600;
-  color: #3a2e28;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 32px;
+  border-radius: 9999px;
+  background: #404040;
+  box-shadow: 0px 8px 24px -4px rgba(0, 0, 0, 0.15);
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.12s;
 }
 
-#bhb-filter .filter-button-style-1:hover {
-  background: #f5f2ec;
-  border-color: #bbb3aa;
-}
-
-#bhb-filter .filter-button-style-1.dark-btn {
-  background: #262626;
-  border-color: #262626;
-}
-
-#bhb-filter .filter-button-style-1.dark-btn .filter-button-2 {
-  color: #fff;
-}
-
-#bhb-filter .filter-button-style-1.dark-btn:hover {
-  background: #3a3a3a;
-  border-color: #3a3a3a;
+#bhb-filter .filter-button-2:hover {
+  background: #2e2e2e;
 }
 
 /* ── Mobile header (hidden on desktop) ── */
@@ -1243,8 +1274,11 @@
     border-top: none;
   }
 
-  #bhb-filter .rent-filter_form.is-mobile-open .filter-button-style-1 {
+  #bhb-filter .rent-filter_form.is-mobile-open .filter-button-1,
+  #bhb-filter .rent-filter_form.is-mobile-open .filter-button-2 {
     flex: 1;
+    padding: 10px 20px;
+    font-size: 14px;
   }
 
   #bhb-filter .tree-scroll {

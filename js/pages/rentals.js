@@ -2002,8 +2002,8 @@
           locField, priceField, currField
         ]),
         mk('div', { class: 'rent-filter_actions' }, [
-          mk('div', { class: 'filter-button-style-1' }, [btnClear]),
-          mk('div', { class: 'filter-button-style-1 dark-btn' }, [btnSearch])
+          btnClear,
+          btnSearch
         ])
       ])
     ]);
