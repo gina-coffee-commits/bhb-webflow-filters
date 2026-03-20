@@ -24,7 +24,7 @@
   inset: -261px 0% auto;
   width: 90%;
   min-width: auto;
-  max-width: 1232px;
+  max-width: 1000px;
   margin: 0 auto;
   margin-bottom: 0;
   padding: 20px 32px;
@@ -134,14 +134,14 @@
 #bhb-filter .location-trigger:hover,
 #bhb-filter .price-trigger:hover {
   outline-color: rgba(196, 168, 130, 0.9);
-  background: #fafaf9;
+  background: transparent;
 }
 
 #bhb-filter .filter-trigger.is-active,
 #bhb-filter .location-trigger.is-active,
 #bhb-filter .price-trigger.is-active {
   outline-color: rgba(196, 168, 130, 1);
-  background: #fafaf9;
+  background: transparent;
 }
 
 /* ── Trigger value wrapper ── */
@@ -967,6 +967,18 @@
 }
 
 /* Clear button */
+#bhb-filter .filter-button-1,
+#bhb-filter .filter-button-1 span,
+#bhb-filter .filter-button-1 svg {
+  color: #404040;
+}
+
+#bhb-filter .filter-button-2,
+#bhb-filter .filter-button-2 span,
+#bhb-filter .filter-button-2 svg {
+  color: #fff;
+}
+
 #bhb-filter .filter-button-1 {
   display: inline-flex;
   align-items: center;
