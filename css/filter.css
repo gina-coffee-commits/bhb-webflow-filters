@@ -74,10 +74,11 @@
 #bhb-filter .rent-filter_actions {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 16px;
+  align-items: stretch;
+  gap: 12px;
   padding: 14px 0;
   flex-shrink: 0;
+  width: 180px;
 }
 
 /* ── Filter field — fluid flex sizing ── */
@@ -90,11 +91,11 @@
   min-width: 0;
 }
 
-/* Relative widths via flex — keyword & price get more space */
-#bhb-filter .filter-field:has(.keyword-input)         { flex: 2; }
-#bhb-filter .filter-field:has(.location-trigger)      { flex: 1.5; }
-#bhb-filter .filter-field:has(.price-trigger-wrapper) { flex: 2; }
-#bhb-filter .filter-field:has(.filter-option[data-value="IDR"]) { flex: 1; }
+/* All fields equal width */
+#bhb-filter .filter-field:has(.keyword-input)         { flex: 1.5; }
+#bhb-filter .filter-field:has(.location-trigger)      { flex: 1; }
+#bhb-filter .filter-field:has(.price-trigger-wrapper) { flex: 1.5; }
+#bhb-filter .filter-field:has(.filter-option[data-value="IDR"]) { flex: 0.75; }
 
 #bhb-filter .filter-label {
   font-size: 12px;
@@ -980,11 +981,12 @@
 }
 
 #bhb-filter .filter-button-1 {
-  display: inline-flex;
+  display: flex;
+  width: 100%;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 32px;
+  padding: 12px 20px;
   white-space: nowrap;
   border-radius: 9999px;
   border: none;
@@ -1009,11 +1011,12 @@
 
 /* Search button */
 #bhb-filter .filter-button-2 {
-  display: inline-flex;
+  display: flex;
+  width: 100%;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 32px;
+  padding: 12px 20px;
   white-space: nowrap;
   border-radius: 9999px;
   border: none;
