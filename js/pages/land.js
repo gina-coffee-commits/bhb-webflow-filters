@@ -115,6 +115,7 @@
 
   var allCards = [], filtered = [], visible = 0;
   var locDropOpen = false, map = null, mapReady = false, markers = [];
+  var locMap = null, locMapReady = false, locMapMarkers = [];
   var areas = [], draftLocs = [], labelByNorm = {};
 
   var state = {
@@ -344,36 +345,13 @@
   }
 
   function closeMobilePanel() {
-    if (window.innerWidth < 768) {
-      var panel = document.querySelector(FILTER_PANEL);
-      if (panel) panel.style.display = 'none';
-    }
     closeAll();
     if (locDropOpen) openLocDrop(false);
-  }
-
-  function injectDropdownCloseBtns() {
-    var drops = document.querySelectorAll('.filter-dropdown,.price-dropdown');
-    for (var i = 0; i < drops.length; i++) {
-      if (drops[i].querySelector('.drop-close-btn')) continue;
-      var btn = document.createElement('button');
-      btn.className = 'drop-close-btn';
-      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1L11 11M11 1L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-      btn.setAttribute('aria-label', 'Close');
-      drops[i].insertBefore(btn, drops[i].firstChild);
-      (function (drop) {
-        btn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          drop.style.display = 'none';
-          drop.classList.remove('is-open');
-          var field = drop.closest('.filter-field');
-          if (field) {
-            var trig = field.querySelector('.filter-trigger,.price-trigger');
-            if (trig) trig.classList.remove('is-active');
-          }
-        });
-      })(drops[i]);
-    }
+    var form = document.querySelector('.rent-filter_form');
+    if (form) form.classList.remove('is-mobile-open');
+    var overlay = document.getElementById('bhbOverlay');
+    if (overlay) overlay.style.display = '';
+    document.body.style.overflow = '';
   }
 
   // ─── EVENT BINDING ───────────────────────────────────────────────────────────
@@ -413,10 +391,18 @@
         applyFilters();
         closeAll();
         if (locDropOpen) openLocDrop(false);
-        if (window.innerWidth < 768) {
-          var panel = document.querySelector(FILTER_PANEL);
-          if (panel) panel.style.display = 'none';
-        }
+      });
+    }
+
+    // mobile collapsed search trigger → open bottom sheet
+    var mobileSearchTrigger = document.querySelector('.bhb-mobile-search-trigger');
+    if (mobileSearchTrigger) {
+      mobileSearchTrigger.addEventListener('click', function () {
+        var form = document.querySelector('.rent-filter_form');
+        var overlay = document.getElementById('bhbOverlay');
+        if (form) form.classList.add('is-mobile-open');
+        if (overlay) overlay.style.display = 'block';
+        document.body.style.overflow = 'hidden';
       });
     }
 
@@ -1041,21 +1027,38 @@
 
   function mountLocUI() {
     if (!el.locDropdown) return;
-    var panel = el.locDropdown.querySelector('.location-panel');
-    if (!panel) return;
-
     locUI = {
-      searchInput:  panel.querySelector('.location-search-input'),
-      treeScroll:   panel.querySelector('.tree-scroll'),
-      pillScroll:   panel.querySelector('.pill-scroll'),
-      selectedInfo: panel.querySelector('#locSelectedInfo'),
-      btnClear:     panel.querySelector('.loc-btn-clear-inline'),
-      btnApply:     panel.querySelector('.loc-btn-apply-inline')
+      searchInput:  el.locDropdown.querySelector('.location-search-input'),
+      treeScroll:   el.locDropdown.querySelector('.tree-scroll'),
+      pillScroll:   el.locDropdown.querySelector('.pill-scroll'),
+      selectedInfo: el.locDropdown.querySelector('#locSelectedInfo'),
+      btnClear:     el.locDropdown.querySelector('.loc-btn-clear-inline'),
+      btnApply:     el.locDropdown.querySelector('.loc-btn-apply-inline')
     };
-
     if (!locUI.searchInput || !locUI.treeScroll || !locUI.pillScroll) return;
 
-    // Attach listeners to existing elements
+    var treeParents = locUI.treeScroll.querySelectorAll('.tree-parent');
+    for (var i = 0; i < treeParents.length; i++) {
+      var parent = treeParents[i];
+      var cw = parent.parentNode.querySelector('.children');
+      if (cw) {
+        parent.addEventListener('click', (function(c) {
+          return function() { c.classList.toggle('open'); };
+        })(cw));
+      }
+    }
+
+    var children = locUI.treeScroll.querySelectorAll('.child');
+    for (var i = 0; i < children.length; i++) {
+      var child = children[i];
+      var loc = child.dataset.location;
+      if (loc) {
+        child.addEventListener('click', (function(l) {
+          return function(e) { e.stopPropagation(); toggleLoc(l); };
+        })(loc));
+      }
+    }
+
     var pills = locUI.pillScroll.querySelectorAll('.pill');
     for (var i = 0; i < pills.length; i++) {
       var pill = pills[i];
@@ -1067,38 +1070,13 @@
       }
     }
 
-    var treeParents = locUI.treeScroll.querySelectorAll('.tree-parent');
-    for (var i = 0; i < treeParents.length; i++) {
-      var parent = treeParents[i];
-      var children = parent.parentNode.querySelector('.children');
-      if (children) {
-        parent.addEventListener('click', (function(cw) {
-          return function() { cw.classList.toggle('open'); };
-        })(children));
-      }
-    }
-
-    var children = locUI.treeScroll.querySelectorAll('.child');
-    for (var i = 0; i < children.length; i++) {
-      var child = children[i];
-      var loc = child.dataset.location;
-      if (loc) {
-        child.addEventListener('click', (function(l) {
-          return function(e) {
-            e.stopPropagation();
-            toggleLoc(l);
-          };
-        })(loc));
-      }
-    }
-
     locUI.searchInput.addEventListener('input', renderLocLists);
 
     if (locUI.btnClear) {
       locUI.btnClear.addEventListener('click', function () {
         draftLocs = [];
         renderLocLists();
-        syncMapWith(draftLocs);
+        syncLocMapMarkers(draftLocs);
         updateDraftInfo();
       });
     }
@@ -1108,6 +1086,71 @@
         commitDraft();
         openLocDrop(false);
       });
+    }
+  }
+
+  function buildLocDOM() {
+    if (!el.locDropdown) return;
+    var treeScroll = el.locDropdown.querySelector('.tree-scroll');
+    var pillScroll = el.locDropdown.querySelector('.pill-scroll');
+    if (!treeScroll || !pillScroll) return;
+
+    treeScroll.innerHTML = '';
+    pillScroll.innerHTML = '';
+
+    for (var a = 0; a < areas.length; a++) {
+      var area = areas[a];
+
+      var pill = document.createElement('div');
+      pill.className = 'pill';
+      pill.dataset.areaId = area.id;
+      pill.textContent = area.label;
+      pillScroll.appendChild(pill);
+
+      var treeItem = document.createElement('div');
+      treeItem.className = 'tree-item';
+      treeItem.dataset.areaId = area.id;
+
+      var treeParent = document.createElement('div');
+      treeParent.className = 'tree-parent';
+      var chevron = document.createElement('div');
+      chevron.className = 'tree-chevron';
+      var parentName = document.createElement('div');
+      parentName.className = 'parent-name';
+      parentName.textContent = area.label;
+      treeParent.appendChild(chevron);
+      treeParent.appendChild(parentName);
+
+      var childrenWrap = document.createElement('div');
+      childrenWrap.className = 'children';
+      var childrenInner = document.createElement('div');
+      childrenInner.className = 'children-inner';
+      var branch = document.createElement('div');
+      branch.className = 'branch';
+      var childList = document.createElement('div');
+      childList.className = 'child-list';
+
+      for (var k = 0; k < area.children.length; k++) {
+        var loc = area.children[k];
+        var label = labelByNorm[loc] || (loc.charAt(0).toUpperCase() + loc.slice(1));
+        var childEl = document.createElement('div');
+        childEl.className = 'child';
+        childEl.dataset.location = loc;
+        var miniPin = document.createElement('div');
+        miniPin.className = 'mini-pin';
+        var span = document.createElement('span');
+        span.textContent = label;
+        childEl.appendChild(miniPin);
+        childEl.appendChild(span);
+        childList.appendChild(childEl);
+      }
+
+      childrenInner.appendChild(branch);
+      childrenInner.appendChild(childList);
+      childrenWrap.appendChild(childrenInner);
+      treeItem.appendChild(treeParent);
+      treeItem.appendChild(childrenWrap);
+      treeScroll.appendChild(treeItem);
     }
   }
 
@@ -1276,6 +1319,54 @@
     });
   }
 
+  function initLocMap() {
+    if (locMap) return;
+    var mapEl = document.getElementById('locMapEl');
+    if (!mapEl || !window.maptilersdk) return;
+    maptilersdk.config.apiKey = MAPTILER_KEY;
+    locMap = new maptilersdk.Map({
+      container: 'locMapEl',
+      style: MAP_STYLE,
+      center: [115.1889, -8.4095],
+      zoom: 9.3,
+      attributionControl: false
+    });
+    locMap.on('load', function () {
+      locMapReady = true;
+      syncLocMapMarkers(draftLocs);
+      setTimeout(function () { locMap.resize(); }, 80);
+    });
+  }
+
+  function syncLocMapMarkers(locations) {
+    if (!locMap || !locMapReady) return;
+    for (var i = 0; i < locMapMarkers.length; i++) locMapMarkers[i].remove();
+    locMapMarkers = [];
+    var pts = [], seen = {};
+    for (var i = 0; i < locations.length; i++) {
+      var p = LOC_COORDS[locations[i]];
+      if (!p) continue;
+      var key = p[0] + ',' + p[1];
+      if (!seen[key]) { seen[key] = true; pts.push({ p: p, loc: locations[i] }); }
+    }
+    if (!pts.length) {
+      locMap.flyTo({ center: [115.1889, -8.4095], zoom: 9.3, duration: 450 });
+      return;
+    }
+    for (var i = 0; i < pts.length; i++) {
+      var label = (labelByNorm[pts[i].loc] || pts[i].loc).replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+      locMapMarkers.push(
+        new maptilersdk.Marker({ element: makePin(label), anchor: 'bottom' })
+          .setLngLat(pts[i].p)
+          .addTo(locMap)
+      );
+    }
+    if (pts.length === 1) { locMap.flyTo({ center: pts[0].p, zoom: 12.2, duration: 450 }); return; }
+    var bounds = new maptilersdk.LngLatBounds();
+    for (var i = 0; i < pts.length; i++) bounds.extend(pts[i].p);
+    locMap.fitBounds(bounds, { padding: 60, maxZoom: 13, duration: 450 });
+  }
+
   function clearMarkers() {
     for (var i = 0; i < markers.length; i++) markers[i].remove();
     markers = [];
@@ -1369,25 +1460,283 @@
     return null;
   }
 
+  // ─── BUILD UI ────────────────────────────────────────────────────────────────
+
+  function buildUI() {
+    var root = document.getElementById('bhb-filter');
+    if (!root) return;
+
+    var CLOSE_SVG   = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1L13 13M13 1L1 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+    var CHEVRON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+    var SEARCH_SVG  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>';
+
+    function mk(tag, attrs, children) {
+      var e = document.createElement(tag);
+      if (attrs) {
+        for (var k in attrs) {
+          if (!attrs.hasOwnProperty(k)) continue;
+          if (k === 'class') e.className = attrs[k];
+          else if (k === 'html') e.innerHTML = attrs[k];
+          else if (k === 'text') e.textContent = attrs[k];
+          else e.setAttribute(k, attrs[k]);
+        }
+      }
+      if (children) {
+        for (var i = 0; i < children.length; i++) {
+          if (children[i]) e.appendChild(children[i]);
+        }
+      }
+      return e;
+    }
+
+    function makeLabel(text) { return mk('div', { class: 'filter-label', text: text }); }
+
+    function makeTrigger(text) {
+      return mk('div', { class: 'filter-trigger' }, [
+        mk('div', { class: 'filter-trigger_value' }, [
+          mk('div', { class: 'filter-trigger_text', text: text })
+        ]),
+        mk('div', { class: 'trigger-chevron', html: CHEVRON_SVG })
+      ]);
+    }
+
+    function makeOption(value, label, checked, withCheckbox) {
+      var children = [];
+      if (withCheckbox !== false) children.push(mk('div', { class: 'filter-checkbox' }));
+      children.push(mk('div', { class: 'text-size-small filter-option_label', text: label }));
+      return mk('div', {
+        class: 'filter-option' + (checked ? ' is-active' : ''),
+        'data-value': value
+      }, children);
+    }
+
+    function makeField(children) { return mk('div', { class: 'filter-field' }, children); }
+
+    function makeDropdown(children) {
+      return mk('div', { class: 'filter-dropdown' }, [
+        mk('div', { class: 'filter-options' }, children)
+      ]);
+    }
+
+    // ── Ownership ──
+    var ownershipField = makeField([
+      makeLabel('Ownership'),
+      makeTrigger('Any'),
+      makeDropdown([
+        makeOption('Any',       'Any',       true,  false),
+        makeOption('Freehold',  'Freehold',  false, false),
+        makeOption('Leasehold', 'Leasehold', false, false)
+      ])
+    ]);
+
+    // ── Land Size ──
+    var landSizeField = makeField([
+      makeLabel('Land Size'),
+      makeTrigger('Any'),
+      makeDropdown([
+        makeOption('Any',            'Any',            true,  false),
+        makeOption('Under 200 m\u00b2', 'Under 200 m\u00b2', false, false),
+        makeOption('200 \u2013 500 m\u00b2',  '200 \u2013 500 m\u00b2',  false, false),
+        makeOption('500 \u2013 1000 m\u00b2', '500 \u2013 1000 m\u00b2', false, false),
+        makeOption('1000+ m\u00b2',  '1000+ m\u00b2',  false, false)
+      ])
+    ]);
+
+    // ── Lease Duration ──
+    var leaseField = makeField([
+      makeLabel('Lease Duration'),
+      makeTrigger('Any'),
+      makeDropdown([
+        makeOption('Any',                 'Any',                 true,  false),
+        makeOption('10 \u2013 20 years',  '10 \u2013 20 years',  false, false),
+        makeOption('20 \u2013 25 years',  '20 \u2013 25 years',  false, false),
+        makeOption('25 \u2013 30 years',  '25 \u2013 30 years',  false, false),
+        makeOption('30+ years',           '30+ years',           false, false)
+      ])
+    ]);
+
+    // ── Keyword ──
+    var kwInput = mk('input', { class: 'keyword-input', type: 'search', placeholder: 'Search\u2026', maxlength: '256' });
+    var kwField = makeField([
+      makeLabel('Keyword / Listing Code'),
+      mk('div', { class: 'filter-trigger' }, [kwInput])
+    ]);
+
+    // ── Location ──
+    var locSearchInput  = mk('input', { class: 'location-search-input', type: 'text', placeholder: 'Search locations\u2026' });
+    var treeScrollEl    = mk('div', { class: 'tree-scroll' });
+    var pillScrollEl    = mk('div', { class: 'pill-scroll' });
+    var locMapContainerEl = mk('div', { id: 'locMapEl', class: 'loc-maptiler-map' });
+    var locSelInfo      = mk('div', { id: 'locSelectedInfo', class: 'loc-selected-info', text: 'No Location Selected' });
+    var locBtnClear     = mk('a', { href: '#', class: 'loc-btn-clear-inline', text: 'Clear' });
+    var locBtnApply     = mk('a', { href: '#', class: 'loc-btn-apply-inline', text: 'Search' });
+    var locCloseBtn     = mk('div', { class: 'close-btn', html: CLOSE_SVG });
+    var locTabArea      = mk('button', { class: 'loc-tab loc-tab-area is-active', type: 'button', text: 'Area' });
+    var locTabMaps      = mk('button', { class: 'loc-tab loc-tab-maps', type: 'button', text: 'Maps' });
+
+    var locDropdown = mk('div', { class: 'location-dropdown' }, [
+      locCloseBtn,
+      mk('div', { class: 'loc-tabs' }, [locTabArea, locTabMaps]),
+      mk('div', { class: 'loc-body' }, [
+        mk('div', { class: 'loc-panel-area is-active' }, [
+          mk('div', { class: 'location-search' }, [
+            mk('img', { src: PIN_URL, alt: '' }),
+            locSearchInput
+          ]),
+          treeScrollEl
+        ]),
+        mk('div', { class: 'loc-panel-maps' }, [
+          mk('div', { class: 'loc-pill-col' }, [
+            mk('div', { class: 'loc-pill-col-label', text: 'Select Locations' }),
+            pillScrollEl
+          ]),
+          mk('div', { class: 'bali-map-wrap' }, [locMapContainerEl])
+        ])
+      ]),
+      mk('div', { class: 'loc-map-footer' }, [
+        locSelInfo,
+        mk('div', { class: 'loc-actions' }, [locBtnClear, locBtnApply])
+      ])
+    ]);
+
+    var locTrigger = mk('div', { class: 'location-trigger' }, [
+      mk('div', { class: 'filter-trigger_value' }, [
+        mk('div', { class: 'location-trigger_text', text: 'All Location' })
+      ]),
+      mk('div', { class: 'trigger-chevron', html: CHEVRON_SVG })
+    ]);
+
+    var locField = makeField([makeLabel('Location'), locTrigger, locDropdown]);
+
+    // ── Price ──
+    var pwFillEl      = mk('div',   { id: 'pwFill',       class: 'pw-fill' });
+    var pwTrackEl     = mk('div',   {                      class: 'pw-track' });
+    var pwSliderEl    = mk('div',   {                      class: 'pw-slider' }, [pwTrackEl, pwFillEl]);
+    var pwMinText     = mk('input', { id: 'pwMinText',     class: 'pw-box', type: 'text', value: '0' });
+    var pwMaxText     = mk('input', { id: 'pwMaxText',     class: 'pw-box', type: 'text', value: '0' });
+    var pwScaleMinEl  = mk('span',  { id: 'pwScaleMin',    class: 'pw-scale-min', text: 'Rp0' });
+    var pwScaleMaxEl  = mk('span',  { id: 'pwScaleMax',    class: 'pw-scale-max', text: 'Rp0' });
+    var pwRangeTextEl = mk('div',   { id: 'pwRangeText',   class: 'pw-range-value', text: '0' });
+    var priceCloseBtn = mk('div',   { class: 'close-btn',  html: CLOSE_SVG });
+
+    var priceDropdown = mk('div', { class: 'price-dropdown' }, [
+      mk('div', { class: 'price-panel' }, [
+        mk('div', { class: 'pp-section' }, [
+          mk('div', { class: 'pp-section-title', text: 'QUICK\u00a0SELECTION' }),
+          mk('div', { class: 'pw-quick' }, [
+            mk('div', { class: 'pw-chip', 'data-chip': '0', text: '< Rp8jt/are' }),
+            mk('div', { class: 'pw-chip', 'data-chip': '1', text: 'Rp8jt \u2013 Rp15jt/are' }),
+            mk('div', { class: 'pw-chip', 'data-chip': '2', text: '> Rp15jt/are' })
+          ])
+        ]),
+        mk('div', { class: 'pp-section' }, [
+          mk('div', { class: 'pp-section-title', text: 'CUSTOM\u00a0RANGE' }),
+          mk('div', { class: 'pw-rows' }, [
+            mk('div', { class: 'pw-row-item' }, [
+              mk('div', { class: 'pw-label', text: 'Minimum Price' }),
+              mk('div', { class: 'pw-box-wrap' }, [mk('div', { id: 'pwSymbolMin', class: 'pw-symbol', text: 'Rp' }), pwMinText])
+            ]),
+            mk('div', { class: 'pw-row-item' }, [
+              mk('div', { class: 'pw-label', text: 'Maximum Price' }),
+              mk('div', { class: 'pw-box-wrap' }, [mk('div', { id: 'pwSymbolMax', class: 'pw-symbol', text: 'Rp' }), pwMaxText])
+            ])
+          ])
+        ]),
+        mk('div', { class: 'pp-section pp-section--slider' }, [
+          mk('div', { class: 'pw-range-head' }, [
+            mk('div', { class: 'pw-range-label', text: 'PRICE RANGE' }),
+            pwRangeTextEl
+          ]),
+          pwSliderEl,
+          mk('div', { class: 'pw-scale' }, [pwScaleMinEl, pwScaleMaxEl])
+        ])
+      ]),
+      priceCloseBtn
+    ]);
+
+    var priceTrigText = mk('div', { class: 'price-trigger_text', text: 'Price Range' });
+    var priceTrigger  = mk('div', { class: 'price-trigger' }, [
+      mk('div', { class: 'filter-trigger_value' }, [priceTrigText]),
+      mk('div', { class: 'trigger-chevron', html: CHEVRON_SVG })
+    ]);
+
+    var priceField = makeField([
+      makeLabel('Price'),
+      mk('div', { class: 'price-trigger-wrapper' }, [
+        priceTrigger,
+        mk('div', { class: 'price-note', text: 'Price per are. Payments in IDR.' })
+      ]),
+      priceDropdown
+    ]);
+
+    // ── Currency ──
+    var currField = makeField([
+      makeLabel('Currency'),
+      makeTrigger('IDR'),
+      makeDropdown([
+        makeOption('IDR', 'IDR', true,  true),
+        makeOption('USD', 'USD', false, true),
+        makeOption('EUR', 'EUR', false, true)
+      ])
+    ]);
+
+    // ── Action buttons ──
+    var btnClear  = mk('button', { type: 'button', class: 'filter-button-1' }, [
+      mk('span', { class: 'btn-icon', html: CLOSE_SVG }),
+      mk('span', { text: 'Clear' })
+    ]);
+    var btnSearch = mk('button', { type: 'button', class: 'filter-button-2' }, [
+      mk('span', { class: 'btn-icon', html: SEARCH_SVG }),
+      mk('span', { text: 'Search Properties' })
+    ]);
+
+    // ── Mobile collapsed card ──
+    var mobileCollapsed = mk('div', { class: 'bhb-mobile-collapsed' }, [
+      mk('div', { class: 'bhb-mobile-title', text: 'Search Land' }),
+      mk('div', { class: 'bhb-mobile-search-trigger' }, [
+        mk('span', { class: 'bhb-mobile-search-placeholder', text: 'Search\u2026' })
+      ])
+    ]);
+
+    var mobileCloseBtn = mk('button', { type: 'button', class: 'close-btn mobile-form-close', html: CLOSE_SVG });
+
+    var filterForm = mk('div', { class: 'rent-filter_form' }, [
+      mobileCloseBtn,
+      mobileCollapsed,
+      mk('div', { class: 'rent-filter_top' }, [
+        ownershipField, landSizeField, leaseField, kwField
+      ]),
+      mk('div', { class: 'rent-filter_bottom' }, [
+        mk('div', { class: 'rent-filter_bottom-fields' }, [
+          locField, priceField, currField
+        ]),
+        mk('div', { class: 'rent-filter_actions' }, [btnClear, btnSearch])
+      ])
+    ]);
+
+    var overlay = mk('div', { id: 'bhbOverlay', class: 'bhb-overlay' });
+    root.appendChild(overlay);
+    root.appendChild(filterForm);
+  }
+
   // ─── INIT ────────────────────────────────────────────────────────────────────
 
   function init() {
+    buildUI();
     cacheEls();
     if (!el.grid) return;
-
-    var allDrops = document.querySelectorAll('.filter-dropdown,.price-dropdown,.location-dropdown');
-    for (var i = 0; i < allDrops.length; i++) allDrops[i].style.display = 'none';
 
     allCards = Array.from(el.grid.querySelectorAll(CFG.CARD_SEL));
     if (!allCards.length) return;
 
+    areas = [];
     buildAreas();
+    buildLocDOM();
     mountLocUI();
     computeBaseBounds();
     initPricePanel();
-    injectDropdownCloseBtns();
     hydrateCoordsFromCMS();
-    loadMapSDK(initMap);
+    loadMapSDK(function () { initMap(); initLocMap(); });
     updateLocText();
     bindEvents();
     setCurrency('IDR');
