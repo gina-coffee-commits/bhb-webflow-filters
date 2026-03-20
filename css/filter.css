@@ -42,7 +42,7 @@
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: 16px;
+  gap: 20px;
   padding: 10px 0;
   border-bottom: 1px solid rgba(214, 211, 209, 0.5);
 }
@@ -57,7 +57,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   padding: 10px 0;
 }
 
@@ -65,7 +65,7 @@
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: 16px;
+  gap: 20px;
   flex: 1;
   min-width: 0;
 }
@@ -74,8 +74,8 @@
 #bhb-filter .rent-filter_actions {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
+  align-items: center;
+  gap: 16px;
   padding: 14px 0;
   flex-shrink: 0;
 }
@@ -972,7 +972,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 12px 32px;
   white-space: nowrap;
   border-radius: 9999px;
   border: none;
@@ -1001,7 +1001,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 12px 32px;
   white-space: nowrap;
   border-radius: 9999px;
   border: none;

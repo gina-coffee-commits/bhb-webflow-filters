@@ -1800,7 +1800,7 @@
 
     // ── Bedrooms ──
     var bedsField = makeField([
-      makeLabel('Bed Rooms'),
+      makeLabel('Bedrooms'),
       makeTrigger('Any'),
       makeDropdown([
         makeOption('Any', 'Any', true),
@@ -1950,7 +1950,7 @@
     ]);
 
     var priceField = makeField([
-      makeLabel('Price'),
+      makeLabel('Price Range'),
       mk('div', { class: 'price-trigger-wrapper' }, [
         priceTrigger,
         mk('div', { class: 'price-note', text: 'Price for reference only. Payments in IDR.' })
