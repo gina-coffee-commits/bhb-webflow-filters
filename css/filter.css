@@ -1150,7 +1150,7 @@
 
   /* Compact floating card */
   #bhb-filter .rent-filter_form {
-    inset: -120px 0% auto;
+    inset: -162px 0% auto;
     width: 92%;
     padding: 20px;
     border-radius: 20px;
@@ -1434,7 +1434,7 @@
 @media (max-width: 479px) {
 
   #bhb-filter .rent-filter_form {
-    inset: -90px 0% auto;
+    inset: -159px 0% auto;
     width: 94%;
     padding: 16px;
   }

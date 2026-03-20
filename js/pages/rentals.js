@@ -1970,13 +1970,6 @@
       ])
     ]);
 
-    // ── Form close (mobile) ──
-    var formCloseBtn = mk('div', { class: 'close-btn', html: CLOSE_SVG });
-    var mobileHeader = mk('div', { class: 'bhb-mobile-header' }, [
-      mk('div', { class: 'bhb-mobile-header-title', text: 'Search' }),
-      formCloseBtn
-    ]);
-
     // ── Action buttons ──
     var btnClear  = mk('button', { type: 'button', class: 'filter-button-1' }, [
       mk('span', { class: 'btn-icon', html: CLOSE_SVG }),
@@ -1998,7 +1991,6 @@
     ]);
 
     var filterForm = mk('div', { class: 'rent-filter_form' }, [
-      mobileHeader,
       mobileCollapsed,
       mk('div', { class: 'rent-filter_top' }, [
         bedsField, availField, kwField
