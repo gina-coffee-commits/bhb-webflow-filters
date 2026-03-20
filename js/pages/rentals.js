@@ -1865,7 +1865,10 @@
           treeScrollEl
         ]),
         mk('div', { class: 'loc-panel-maps' }, [
-          pillScrollEl,
+          mk('div', { class: 'loc-pill-col' }, [
+            mk('div', { class: 'loc-pill-col-label', text: 'Select Locations' }),
+            pillScrollEl
+          ]),
           mk('div', { class: 'bali-map-wrap' }, [locMapContainerEl])
         ]),
       ]),

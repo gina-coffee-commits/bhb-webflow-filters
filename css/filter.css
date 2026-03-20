@@ -394,25 +394,67 @@
   overflow: hidden;
 }
 
-/* Maps panel: horizontal pills + map */
+/* Maps panel: pill col + map */
 #bhb-filter .loc-panel-maps {
-  gap: 10px;
+  gap: 12px;
 }
 
-#bhb-filter .loc-panel-maps .pill-scroll {
-  flex-direction: row;
+/* Pill column (left of map) */
+#bhb-filter .loc-pill-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+#bhb-filter .loc-pill-col-label {
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #78716c;
+  line-height: 16px;
+}
+
+/* Pill list inside the column */
+#bhb-filter .loc-pill-col .pill-scroll {
+  flex-direction: column;
   flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  gap: 10px;
   max-height: none;
-  gap: 6px;
   flex-shrink: 0;
-  padding-bottom: 4px;
 }
 
-#bhb-filter .loc-panel-maps .pill {
-  flex-shrink: 0;
+/* Pills in Maps panel */
+#bhb-filter .loc-pill-col .pill {
+  padding: 10px 20px;
+  background: #fff;
+  border-radius: 8px;
+  border: none;
+  outline: 1px solid rgba(120, 113, 108, 0.4);
+  outline-offset: -1px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #27272a;
+  text-align: center;
   white-space: nowrap;
+  cursor: pointer;
+  transition: outline-color 0.12s, background 0.12s, color 0.12s;
+}
+
+#bhb-filter .loc-pill-col .pill:hover {
+  outline-color: rgba(120, 113, 108, 0.7);
+  background: #fafaf9;
+}
+
+#bhb-filter .loc-pill-col .pill.is-active {
+  background: #262626;
+  outline-color: #262626;
+  color: #fff;
 }
 
 /* MapTiler map in location dropdown */
@@ -1409,11 +1451,23 @@
   #bhb-filter .loc-panel-maps {
     display: flex !important;
     flex: 1;
+    align-items: stretch;
+  }
+
+  /* Pill column fixed width on desktop */
+  #bhb-filter .loc-pill-col {
+    width: 140px;
+    padding: 4px 0;
+    overflow-y: auto;
+  }
+
+  #bhb-filter .loc-pill-col .pill-scroll {
+    overflow-y: visible;
   }
 
   /* Map fills full height on desktop */
   #bhb-filter .loc-panel-maps .bali-map-wrap {
-    height: 100%;
+    height: auto;
     flex: 1;
   }
 }
