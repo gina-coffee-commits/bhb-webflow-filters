@@ -1606,24 +1606,280 @@
     if (m) return [parseFloat(m[2]), parseFloat(m[1])];
     return null;
   }
+  function buildUI() {
+    var root = document.getElementById('bhb-filter');
+    if (!root) return;
+
+    var CLOSE_SVG   = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1L13 13M13 1L1 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+    var CHEVRON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+    var SEARCH_SVG  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>';
+
+    function mk(tag, attrs, children) {
+      var e = document.createElement(tag);
+      if (attrs) {
+        for (var k in attrs) {
+          if (!attrs.hasOwnProperty(k)) continue;
+          if (k === 'class') e.className = attrs[k];
+          else if (k === 'html') e.innerHTML = attrs[k];
+          else if (k === 'text') e.textContent = attrs[k];
+          else e.setAttribute(k, attrs[k]);
+        }
+      }
+      if (children) {
+        for (var i = 0; i < children.length; i++) {
+          if (children[i]) e.appendChild(children[i]);
+        }
+      }
+      return e;
+    }
+
+    function makeLabel(text) { return mk('div', { class: 'filter-label', text: text }); }
+
+    function makeTrigger(text) {
+      return mk('div', { class: 'filter-trigger' }, [
+        mk('div', { class: 'filter-trigger_value' }, [
+          mk('div', { class: 'filter-trigger_text', text: text })
+        ]),
+        mk('div', { class: 'trigger-chevron', html: CHEVRON_SVG })
+      ]);
+    }
+
+    function makeOption(value, label, checked, withCheckbox) {
+      var children = [];
+      if (withCheckbox !== false) children.push(mk('div', { class: 'filter-checkbox' }));
+      children.push(mk('div', { class: 'text-size-small filter-option_label', text: label }));
+      return mk('div', {
+        class: 'filter-option' + (checked ? ' is-active' : ''),
+        'data-value': value
+      }, children);
+    }
+
+    function makeField(children) { return mk('div', { class: 'filter-field' }, children); }
+
+    function makeDropdown(children) {
+      return mk('div', { class: 'filter-dropdown' }, [
+        mk('div', { class: 'filter-options' }, children)
+      ]);
+    }
+
+    // ── Ownership ──
+    var ownershipField = makeField([
+      makeLabel('Ownership'),
+      makeTrigger('Any'),
+      makeDropdown([
+        makeOption('Any',       'Any',       true,  false),
+        makeOption('Freehold',  'Freehold',  false, false),
+        makeOption('Leasehold', 'Leasehold', false, false)
+      ])
+    ]);
+
+    // ── Bedrooms ──
+    var bedsField = makeField([
+      makeLabel('Bedrooms'),
+      makeTrigger('Any'),
+      makeDropdown([
+        makeOption('Any', 'Any', true),
+        makeOption('1',   '1 Br',  false),
+        makeOption('2',   '2 Br',  false),
+        makeOption('3',   '3 Br',  false),
+        makeOption('4',   '4 Br',  false),
+        makeOption('5',   '5 Br',  false),
+        makeOption('6+',  '6+ Br', false)
+      ])
+    ]);
+
+    // ── Lease Duration ──
+    var leaseField = makeField([
+      makeLabel('Lease Duration'),
+      makeTrigger('Any'),
+      makeDropdown([
+        makeOption('Any',                'Any',                true,  false),
+        makeOption('10 \u2013 20 years', '10 \u2013 20 years', false, false),
+        makeOption('20 \u2013 25 years', '20 \u2013 25 years', false, false),
+        makeOption('25 \u2013 30 years', '25 \u2013 30 years', false, false),
+        makeOption('30+ years',          '30+ years',          false, false)
+      ])
+    ]);
+
+    // ── Keyword ──
+    var kwInput = mk('input', { class: 'keyword-input', type: 'search', placeholder: 'Search\u2026', maxlength: '256' });
+    var kwField = makeField([
+      makeLabel('Keyword / Listing Code'),
+      mk('div', { class: 'filter-trigger' }, [kwInput])
+    ]);
+
+    // ── Location ──
+    var locSearchInput    = mk('input', { class: 'location-search-input', type: 'text', placeholder: 'Search locations\u2026' });
+    var treeScrollEl      = mk('div', { class: 'tree-scroll' });
+    var pillScrollEl      = mk('div', { class: 'pill-scroll' });
+    var locMapContainerEl = mk('div', { id: 'locMapEl', class: 'loc-maptiler-map' });
+    var locSelInfo        = mk('div', { id: 'locSelectedInfo', class: 'loc-selected-info', text: 'No Location Selected' });
+    var locBtnClear       = mk('a', { href: '#', class: 'loc-btn-clear-inline', text: 'Clear' });
+    var locBtnApply       = mk('a', { href: '#', class: 'loc-btn-apply-inline', text: 'Search' });
+    var locCloseBtn       = mk('div', { class: 'close-btn', html: CLOSE_SVG });
+    var locTabArea        = mk('button', { class: 'loc-tab loc-tab-area is-active', type: 'button', text: 'Area' });
+    var locTabMaps        = mk('button', { class: 'loc-tab loc-tab-maps', type: 'button', text: 'Maps' });
+
+    var locDropdown = mk('div', { class: 'location-dropdown' }, [
+      locCloseBtn,
+      mk('div', { class: 'loc-tabs' }, [locTabArea, locTabMaps]),
+      mk('div', { class: 'loc-body' }, [
+        mk('div', { class: 'loc-panel-area is-active' }, [
+          mk('div', { class: 'location-search' }, [
+            mk('img', { src: PIN_URL, alt: '' }),
+            locSearchInput
+          ]),
+          treeScrollEl
+        ]),
+        mk('div', { class: 'loc-panel-maps' }, [
+          mk('div', { class: 'loc-pill-col' }, [
+            mk('div', { class: 'loc-pill-col-label', text: 'Select Locations' }),
+            pillScrollEl
+          ]),
+          mk('div', { class: 'bali-map-wrap' }, [locMapContainerEl])
+        ])
+      ]),
+      mk('div', { class: 'loc-map-footer' }, [
+        locSelInfo,
+        mk('div', { class: 'loc-actions' }, [locBtnClear, locBtnApply])
+      ])
+    ]);
+
+    var locTrigger = mk('div', { class: 'location-trigger' }, [
+      mk('div', { class: 'filter-trigger_value' }, [
+        mk('div', { class: 'location-trigger_text', text: 'All Location' })
+      ]),
+      mk('div', { class: 'trigger-chevron', html: CHEVRON_SVG })
+    ]);
+
+    var locField = makeField([makeLabel('Location'), locTrigger, locDropdown]);
+
+    // ── Price ──
+    var pwFillEl      = mk('div',   { id: 'pwFill',      class: 'pw-fill' });
+    var pwTrackEl     = mk('div',   {                     class: 'pw-track' });
+    var pwSliderEl    = mk('div',   {                     class: 'pw-slider' }, [pwTrackEl, pwFillEl]);
+    var pwMinText     = mk('input', { id: 'pwMinText',    class: 'pw-box', type: 'text', value: '0' });
+    var pwMaxText     = mk('input', { id: 'pwMaxText',    class: 'pw-box', type: 'text', value: '0' });
+    var pwScaleMinEl  = mk('span',  { id: 'pwScaleMin',   class: 'pw-scale-min', text: 'Rp0' });
+    var pwScaleMaxEl  = mk('span',  { id: 'pwScaleMax',   class: 'pw-scale-max', text: 'Rp0' });
+    var pwRangeTextEl = mk('div',   { id: 'pwRangeText',  class: 'pw-range-value', text: '0' });
+    var priceCloseBtn = mk('div',   { class: 'close-btn', html: CLOSE_SVG });
+
+    var priceDropdown = mk('div', { class: 'price-dropdown' }, [
+      mk('div', { class: 'price-panel' }, [
+        mk('div', { class: 'pp-section' }, [
+          mk('div', { class: 'pp-section-title', text: 'QUICK\u00a0SELECTION' }),
+          mk('div', { class: 'pw-quick' }, [
+            mk('div', { class: 'pw-chip', 'data-chip': '0', text: '< 50jt' }),
+            mk('div', { class: 'pw-chip', 'data-chip': '1', text: '50jt \u2013 200jt' }),
+            mk('div', { class: 'pw-chip', 'data-chip': '2', text: '> 200jt' })
+          ])
+        ]),
+        mk('div', { class: 'pp-section' }, [
+          mk('div', { class: 'pp-section-title', text: 'CUSTOM\u00a0RANGE' }),
+          mk('div', { class: 'pw-rows' }, [
+            mk('div', { class: 'pw-row-item' }, [
+              mk('div', { class: 'pw-label', text: 'Minimum Price' }),
+              mk('div', { class: 'pw-box-wrap' }, [mk('div', { id: 'pwSymbolMin', class: 'pw-symbol', text: 'Rp' }), pwMinText])
+            ]),
+            mk('div', { class: 'pw-row-item' }, [
+              mk('div', { class: 'pw-label', text: 'Maximum Price' }),
+              mk('div', { class: 'pw-box-wrap' }, [mk('div', { id: 'pwSymbolMax', class: 'pw-symbol', text: 'Rp' }), pwMaxText])
+            ])
+          ])
+        ]),
+        mk('div', { class: 'pp-section pp-section--slider' }, [
+          mk('div', { class: 'pw-range-head' }, [
+            mk('div', { class: 'pw-range-label', text: 'PRICE RANGE' }),
+            pwRangeTextEl
+          ]),
+          pwSliderEl,
+          mk('div', { class: 'pw-scale' }, [pwScaleMinEl, pwScaleMaxEl])
+        ])
+      ]),
+      priceCloseBtn
+    ]);
+
+    var priceTrigText = mk('div', { class: 'price-trigger_text', text: 'Price Range' });
+    var priceTrigger  = mk('div', { class: 'price-trigger' }, [
+      mk('div', { class: 'filter-trigger_value' }, [priceTrigText]),
+      mk('div', { class: 'trigger-chevron', html: CHEVRON_SVG })
+    ]);
+
+    var priceField = makeField([
+      makeLabel('Price Range'),
+      mk('div', { class: 'price-trigger-wrapper' }, [
+        priceTrigger,
+        mk('div', { class: 'price-note', text: 'Price for reference only. Payments in IDR.' })
+      ]),
+      priceDropdown
+    ]);
+
+    // ── Currency ──
+    var currField = makeField([
+      makeLabel('Currency'),
+      makeTrigger('IDR'),
+      makeDropdown([
+        makeOption('IDR', 'IDR', true,  true),
+        makeOption('USD', 'USD', false, true),
+        makeOption('EUR', 'EUR', false, true)
+      ])
+    ]);
+
+    // ── Action buttons ──
+    var btnClear  = mk('button', { type: 'button', class: 'filter-button-1' }, [
+      mk('span', { class: 'btn-icon', html: CLOSE_SVG }),
+      mk('span', { text: 'Clear' })
+    ]);
+    var btnSearch = mk('button', { type: 'button', class: 'filter-button-2' }, [
+      mk('span', { class: 'btn-icon', html: SEARCH_SVG }),
+      mk('span', { text: 'Search Properties' })
+    ]);
+
+    // ── Mobile collapsed card ──
+    var mobileCollapsed = mk('div', { class: 'bhb-mobile-collapsed' }, [
+      mk('div', { class: 'bhb-mobile-title', text: 'Search Villas' }),
+      mk('div', { class: 'bhb-mobile-search-trigger' }, [
+        mk('span', { class: 'bhb-mobile-search-placeholder', text: 'Search\u2026' })
+      ])
+    ]);
+
+    var mobileCloseBtn = mk('button', { type: 'button', class: 'close-btn mobile-form-close', html: CLOSE_SVG });
+
+    var filterForm = mk('div', { class: 'rent-filter_form' }, [
+      mobileCloseBtn,
+      mobileCollapsed,
+      mk('div', { class: 'rent-filter_top' }, [
+        ownershipField, bedsField, leaseField, kwField
+      ]),
+      mk('div', { class: 'rent-filter_bottom' }, [
+        mk('div', { class: 'rent-filter_bottom-fields' }, [
+          locField, priceField, currField
+        ]),
+        mk('div', { class: 'rent-filter_actions' }, [btnClear, btnSearch])
+      ])
+    ]);
+
+    var overlay = mk('div', { id: 'bhbOverlay', class: 'bhb-overlay' });
+    root.appendChild(overlay);
+    root.appendChild(filterForm);
+  }
+
   function init() {
+    buildUI();
     cacheEls();
     if (!el.grid) return;
-    var allDrops = document.querySelectorAll(
-      ".filter-dropdown,.price-dropdown,.location-dropdown",
-    );
-    for (var i = 0; i < allDrops.length; i++)
-      allDrops[i].style.display = "none";
     allCards = Array.from(el.grid.querySelectorAll(CFG.CARD_SEL));
     if (!allCards.length) return;
+    areas = [];
     buildAreas();
+    buildLocDOM();
     mountLocUI();
     computeBaseBounds();
     initPricePanel();
     updatePriceRangeForOwnership();
-    injectDropdownCloseBtns();
     hydrateCoordsFromCMS();
-    loadMapSDK(initMap);
+    loadMapSDK(function () { initMap(); initLocMap(); });
     updateLocText();
     bindEvents();
     setCurrency("IDR");
