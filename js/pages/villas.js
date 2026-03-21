@@ -273,8 +273,8 @@
       priceDropdown: document.querySelector(".price-dropdown"),
       btnClear: document.querySelector(".filter-button-1"),
       btnSearch: document.querySelector(".filter-button-2"),
-      resultsCount: document.getElementById("rental-results-count"),
-      emptyState: document.getElementById("rental-empty-state"),
+      resultsCount: document.getElementById("villas-results-count") || document.getElementById("rental-results-count"),
+      emptyState: document.getElementById("villas-empty-state") || document.getElementById("rental-empty-state"),
       btnLoadMore: document.getElementById("load-more"),
       btnBackTop: null,
       grid: document.getElementById(CFG.GRID_ID),
@@ -1902,9 +1902,9 @@
   function init() {
     buildUI();
     cacheEls();
-    if (!el.grid) return;
+    if (!el.grid) { console.error('[BHB villas] grid #' + CFG.GRID_ID + ' not found'); return; }
     allCards = Array.from(el.grid.querySelectorAll(CFG.CARD_SEL));
-    if (!allCards.length) return;
+    if (!allCards.length) { console.error('[BHB villas] no cards (' + CFG.CARD_SEL + ') inside grid'); return; }
     areas = [];
     buildAreas();
     buildLocDOM();
