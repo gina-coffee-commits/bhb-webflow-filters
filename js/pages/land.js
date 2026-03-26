@@ -486,8 +486,10 @@
   function passesPrice(d, card) {
     var price = getPricePerAre(card);
     if (!isFinite(price) || price === 0) price = d.price;
-    if (state.priceMin !== null && price < state.priceMin) return false;
-    if (state.priceMax !== null && price > state.priceMax) return false;
+    var cardCurrency = d.currency || 'IDR';
+    var priceInActiveCurrency = convertAmount(price, cardCurrency, state.currency);
+    if (state.priceMin !== null && priceInActiveCurrency < state.priceMin) return false;
+    if (state.priceMax !== null && priceInActiveCurrency > state.priceMax) return false;
     return true;
   }
   function passesLease(card) {
@@ -1667,7 +1669,7 @@
       makeLabel('Price Range'),
       mk('div', { class: 'price-trigger-wrapper' }, [
         priceTrigger,
-        mk('div', { class: 'price-note', text: 'Price per ara. Freehold = per ara, Leasehold = per ara/yr.' })
+        mk('div', { class: 'price-note', text: 'Price for reference only. Payments in IDR.' })
       ]),
       priceDropdown
     ]);
