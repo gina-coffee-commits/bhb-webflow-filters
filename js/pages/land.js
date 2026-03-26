@@ -1059,6 +1059,26 @@
         })(areaId));
       }
     }
+    var mobilePillBtns = el.locDropdown.querySelectorAll('.mobile-area-pill');
+    for (var i = 0; i < mobilePillBtns.length; i++) {
+      var mpBtn = mobilePillBtns[i];
+      var mpId = mpBtn.dataset.areaId;
+      if (mpId) {
+        mpBtn.addEventListener('click', (function(aId) {
+          return function() { toggleArea(aId); };
+        })(mpId));
+      }
+    }
+    var mobileLocItems = el.locDropdown.querySelectorAll('.mobile-loc-item');
+    for (var i = 0; i < mobileLocItems.length; i++) {
+      var mItem = mobileLocItems[i];
+      var mLoc = mItem.dataset.location;
+      if (mLoc) {
+        mItem.addEventListener('click', (function(l) {
+          return function() { toggleLoc(l); };
+        })(mLoc));
+      }
+    }
     var tabAreaBtn = el.locDropdown.querySelector('.loc-tab-area');
     var tabMapsBtn = el.locDropdown.querySelector('.loc-tab-maps');
     var panelArea  = el.locDropdown.querySelector('.loc-panel-area');
@@ -1151,6 +1171,42 @@
       treeItem.appendChild(childrenWrap);
       treeScroll.appendChild(treeItem);
     }
+    var panelAreaEl = el.locDropdown.querySelector('.loc-panel-area');
+    if (panelAreaEl) {
+      var mobileAreaPills = document.createElement('div');
+      mobileAreaPills.className = 'loc-mobile-area-pills';
+      for (var a2 = 0; a2 < areas.length; a2++) {
+        var mpill = document.createElement('button');
+        mpill.className = 'mobile-area-pill';
+        mpill.type = 'button';
+        mpill.dataset.areaId = areas[a2].id;
+        mpill.textContent = areas[a2].label;
+        mobileAreaPills.appendChild(mpill);
+      }
+      panelAreaEl.appendChild(mobileAreaPills);
+    }
+    var panelMapsEl = el.locDropdown.querySelector('.loc-panel-maps');
+    if (panelMapsEl) {
+      var mobileLocList = document.createElement('div');
+      mobileLocList.className = 'loc-mobile-loc-list';
+      for (var a3 = 0; a3 < areas.length; a3++) {
+        for (var k2 = 0; k2 < areas[a3].children.length; k2++) {
+          var locKey = areas[a3].children[k2];
+          var locLabel = labelByNorm[locKey] || (locKey.charAt(0).toUpperCase() + locKey.slice(1));
+          var mlocItem = document.createElement('div');
+          mlocItem.className = 'mobile-loc-item';
+          mlocItem.dataset.location = locKey;
+          var mPin = document.createElement('div');
+          mPin.className = 'mini-pin';
+          var mSpan = document.createElement('span');
+          mSpan.textContent = locLabel;
+          mlocItem.appendChild(mPin);
+          mlocItem.appendChild(mSpan);
+          mobileLocList.appendChild(mlocItem);
+        }
+      }
+      panelMapsEl.appendChild(mobileLocList);
+    }
   }
   function renderLocLists() {
     if (!locUI.treeScroll || !locUI.pillScroll) return;
@@ -1199,6 +1255,28 @@
             childEl.style.display = visKids.indexOf(loc) > -1 ? '' : 'none';
           }
         }
+      }
+    }
+    var mobilePillEls = el.locDropdown ? el.locDropdown.querySelectorAll('.mobile-area-pill') : [];
+    for (var mp = 0; mp < mobilePillEls.length; mp++) {
+      var mpEl = mobilePillEls[mp];
+      var mpAreaId = mpEl.dataset.areaId;
+      for (var ma = 0; ma < areas.length; ma++) {
+        if (areas[ma].id === mpAreaId) {
+          var mpAreaActive = areas[ma].children.some(function(c) { return draftLocs.indexOf(c) > -1; });
+          mpEl.classList.toggle('is-active', mpAreaActive);
+          break;
+        }
+      }
+    }
+    var mobileLocEls = el.locDropdown ? el.locDropdown.querySelectorAll('.mobile-loc-item') : [];
+    for (var mi = 0; mi < mobileLocEls.length; mi++) {
+      var miEl = mobileLocEls[mi];
+      var miLoc = miEl.dataset.location;
+      if (miLoc) {
+        miEl.classList.toggle('is-active', draftLocs.indexOf(miLoc) > -1);
+        var miLabel = labelByNorm[miLoc] || miLoc;
+        miEl.style.display = !q || norm(miLabel).indexOf(q) > -1 || norm(miLoc).indexOf(q) > -1 ? '' : 'none';
       }
     }
     updateDraftInfo();
@@ -1276,14 +1354,30 @@
     if (locDropOpen) {
       if (map) setTimeout(function () { map.resize(); }, 80);
       if (locMap) setTimeout(function () { locMap.resize(); }, 80);
-      if (window.innerWidth < 768) {
+      if (window.innerWidth <= 991) {
         document.body.appendChild(el.locDropdown);
         el.locDropdown.classList.add('is-mobile-open');
         document.body.style.overflow = 'hidden';
+        var mPA = el.locDropdown.querySelector('.loc-panel-area');
+        var mPM = el.locDropdown.querySelector('.loc-panel-maps');
+        var mMW = el.locDropdown.querySelector('.bali-map-wrap');
+        var mLS = el.locDropdown.querySelector('.location-search');
+        if (mPA && mMW) mPA.appendChild(mMW);
+        if (mPM && mLS) mPM.insertBefore(mLS, mPM.firstChild);
+        var mTab = el.locDropdown.querySelector('.loc-tab-maps');
+        if (mTab) { mTab.dataset.origText = mTab.textContent; mTab.textContent = 'Location'; }
         setTimeout(function() { if (locMap) locMap.resize(); }, 150);
       }
     } else {
       el.locDropdown.classList.remove('is-mobile-open');
+      var rPM = el.locDropdown.querySelector('.loc-panel-maps');
+      var rPA = el.locDropdown.querySelector('.loc-panel-area');
+      var rMW = el.locDropdown.querySelector('.bali-map-wrap');
+      var rLS = el.locDropdown.querySelector('.location-search');
+      if (rPM && rMW && rMW.parentNode !== rPM) rPM.appendChild(rMW);
+      if (rPA && rLS && rLS.parentNode !== rPA) rPA.insertBefore(rLS, rPA.firstChild);
+      var rTab = el.locDropdown.querySelector('.loc-tab-maps');
+      if (rTab && rTab.dataset.origText) rTab.textContent = rTab.dataset.origText;
       if (el.locDropdownParent && el.locDropdown.parentNode !== el.locDropdownParent) {
         el.locDropdownParent.appendChild(el.locDropdown);
       }
