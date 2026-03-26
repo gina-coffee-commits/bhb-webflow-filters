@@ -479,11 +479,13 @@
       ownership: (inner.dataset.available || "").toLowerCase(),
     };
   }
-  function passesPrice(d, card) {
-    var el2 = card.querySelector(".price");
-    var txt = el2 ? el2.textContent.trim() : "";
-    var dsp = txt ? parseInt(txt.replace(/[^\d]/g, ""), 10) : NaN;
-    var price = isFinite(dsp) ? dsp : d.price;
+  function priceUnitSuffix() {
+    if (state.ownership === "Leasehold") return "/ara/yr";
+    return "/ara";
+  }
+  function passesPrice(d) {
+    if (state.priceMin === null && state.priceMax === null) return true;
+    var price = convertAmount(d.price, d.currency || "IDR", state.currency);
     if (state.priceMin !== null && price < state.priceMin) return false;
     if (state.priceMax !== null && price > state.priceMax) return false;
     return true;
@@ -511,7 +513,7 @@
       return false;
     if (state.locations.length > 0 && state.locations.indexOf(d.loc) === -1)
       return false;
-    if (!passesPrice(d, card)) return false;
+    if (!passesPrice(d)) return false;
     if (!passesLease(card)) return false;
     if (state.keyword) {
       var kw = state.keyword.toLowerCase();
@@ -639,8 +641,9 @@
     if (symMaxEl) symMaxEl.textContent = sym;
     var scaleMin = document.getElementById("pwScaleMin");
     var scaleMax = document.getElementById("pwScaleMax");
-    if (scaleMin) scaleMin.textContent = sym + short(newMin);
-    if (scaleMax) scaleMax.textContent = sym + short(newMax);
+    var unit = priceUnitSuffix();
+    if (scaleMin) scaleMin.textContent = sym + short(newMin) + unit;
+    if (scaleMax) scaleMax.textContent = sym + short(newMax) + unit;
     var fillEl = document.getElementById("pwFill");
     var sw = document.querySelector(".pw-slider");
     var tMin = sw ? sw.querySelector(".pw-thumb-min") : null;
@@ -672,12 +675,12 @@
     var rangeText = document.getElementById("pwRangeText");
     if (rangeText)
       rangeText.textContent =
-        sym + short(minV) + " \u2013 " + sym + short(maxV);
+        sym + short(minV) + unit + " \u2013 " + sym + short(maxV) + unit;
     if (el.priceTrigText) {
       var full = slider.minRatio <= 0 && slider.maxRatio >= 1;
       el.priceTrigText.textContent = full
         ? "Price Range"
-        : sym + short(minV) + " \u2013 " + sym + short(maxV);
+        : sym + short(minV) + unit + " \u2013 " + sym + short(maxV) + unit;
     }
   }
   function getCardsByOwnership(cards, ownership) {
@@ -712,6 +715,8 @@
     slider.base.max = range.max;
     slider.minRatio = 0;
     slider.maxRatio = 1;
+    var unitLabelEl = document.getElementById("pwUnitLabel");
+    if (unitLabelEl) unitLabelEl.textContent = priceUnitSuffix();
     generateDynamicChips(range.min, range.max);
     updateSliderForCurrency(state.currency);
   }
@@ -724,10 +729,11 @@
       var curr = currencies[c];
       var tier1 = convertAmount(tier1Max, 'IDR', curr);
       var tier2 = convertAmount(tier2Max, 'IDR', curr);
+      var unit = priceUnitSuffix();
       dynamicChips[curr] = [
-        { label: '< ' + short(tier1), min: 0, max: tier1 },
-        { label: short(tier1) + ' \u2013 ' + short(tier2), min: tier1, max: tier2 },
-        { label: '> ' + short(tier2), min: tier2, max: null }
+        { label: '< ' + short(tier1) + unit, min: 0, max: tier1 },
+        { label: short(tier1) + ' \u2013 ' + short(tier2) + unit, min: tier1, max: tier2 },
+        { label: '> ' + short(tier2) + unit, min: tier2, max: null }
       ];
     }
   }
@@ -1629,7 +1635,10 @@
         ]),
         mk('div', { class: 'pp-section pp-section--slider' }, [
           mk('div', { class: 'pw-range-head' }, [
-            mk('div', { class: 'pw-range-label', text: 'PRICE RANGE' }),
+            mk('div', { class: 'pw-range-head-left' }, [
+              mk('div', { class: 'pw-range-label', text: 'PRICE RANGE' }),
+              mk('div', { id: 'pwUnitLabel', class: 'pw-unit-label', text: '/ara' })
+            ]),
             pwRangeTextEl
           ]),
           pwSliderEl,
@@ -1649,7 +1658,7 @@
       makeLabel('Price Range'),
       mk('div', { class: 'price-trigger-wrapper' }, [
         priceTrigger,
-        mk('div', { class: 'price-note', text: 'Price for reference only. Payments in IDR.' })
+        mk('div', { class: 'price-note', text: 'Price per ara. Freehold = per ara, Leasehold = per ara/yr.' })
       ]),
       priceDropdown
     ]);
