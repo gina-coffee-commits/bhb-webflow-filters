@@ -1603,34 +1603,6 @@
     if (locDropOpen) {
       if (map) setTimeout(function () { map.resize(); }, 80);
       if (locMap) setTimeout(function () { locMap.resize(); }, 80);
-      if (window.innerWidth <= 991) {
-        document.body.appendChild(el.locDropdown);
-        el.locDropdown.classList.add('is-mobile-open');
-        document.body.style.overflow = 'hidden';
-        var mPA = el.locDropdown.querySelector('.loc-panel-area');
-        var mPM = el.locDropdown.querySelector('.loc-panel-maps');
-        var mMW = el.locDropdown.querySelector('.bali-map-wrap');
-        var mLS = el.locDropdown.querySelector('.location-search');
-        if (mPA && mMW) mPA.appendChild(mMW);
-        if (mPM && mLS) mPM.insertBefore(mLS, mPM.firstChild);
-        var mTab = el.locDropdown.querySelector('.loc-tab-maps');
-        if (mTab) { mTab.dataset.origText = mTab.textContent; mTab.textContent = 'Location'; }
-        setTimeout(function() { if (locMap) locMap.resize(); }, 150);
-      }
-    } else {
-      el.locDropdown.classList.remove('is-mobile-open');
-      var rPM = el.locDropdown.querySelector('.loc-panel-maps');
-      var rPA = el.locDropdown.querySelector('.loc-panel-area');
-      var rMW = el.locDropdown.querySelector('.bali-map-wrap');
-      var rLS = el.locDropdown.querySelector('.location-search');
-      if (rPM && rMW && rMW.parentNode !== rPM) rPM.appendChild(rMW);
-      if (rPA && rLS && rLS.parentNode !== rPA) rPA.insertBefore(rLS, rPA.firstChild);
-      var rTab = el.locDropdown.querySelector('.loc-tab-maps');
-      if (rTab && rTab.dataset.origText) rTab.textContent = rTab.dataset.origText;
-      if (el.locDropdownParent && el.locDropdown.parentNode !== el.locDropdownParent) {
-        el.locDropdownParent.appendChild(el.locDropdown);
-      }
-      document.body.style.overflow = '';
     }
     if (!locDropOpen) syncMapWith(state.locations);
   }
@@ -2127,34 +2099,45 @@
   function injectMobileLocStyles() {
     if (document.querySelector('style[data-bhb-mobile-loc]')) return;
     var css = [
-      /* ── Tab bar: floating pill container ── */
-      '.location-dropdown.is-mobile-open .loc-tabs{margin:12px 16px;padding:3px;background:#4d3f38;border-radius:50px;border:none;gap:2px;flex-shrink:0;}',
-      '.location-dropdown.is-mobile-open .loc-tab{flex:1;height:42px;border:none;border-radius:50px;background:transparent;color:rgba(255,255,255,0.55);font-size:14px;font-weight:500;cursor:pointer;transition:none;}',
-      '.location-dropdown.is-mobile-open .loc-tab.is-active{background:#3a2e28!important;color:#fff!important;border-color:transparent!important;}',
-      '.location-dropdown.is-mobile-open .loc-tab:hover:not(.is-active){background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.85);}',
-      /* ── Area panel ── */
-      '.location-dropdown.is-mobile-open .loc-panel-area.is-active{padding:12px 16px;}',
-      '.location-dropdown.is-mobile-open .loc-mobile-area-pills{padding:0;gap:8px;}',
-      '.location-dropdown.is-mobile-open .mobile-area-pill{width:100%;background:#fff;border:1px solid #e0d9d3;border-radius:12px;padding:14px 16px;font-size:14px;font-weight:500;color:#3a2e28;text-align:left;cursor:pointer;display:block;box-sizing:border-box;}',
-      '.location-dropdown.is-mobile-open .mobile-area-pill.is-active{background:#3a2e28;border-color:#3a2e28;color:#fff;}',
-      '.location-dropdown.is-mobile-open .bali-map-wrap{height:180px!important;flex:none!important;border-radius:12px;overflow:hidden;margin-top:12px;}',
-      /* ── Location panel ── */
-      '.location-dropdown.is-mobile-open .loc-panel-maps.is-active{padding:12px 16px;}',
-      '.location-dropdown.is-mobile-open .location-search{padding:0 0 8px 0;border-bottom:none;}',
-      '.location-dropdown.is-mobile-open .location-search img{display:none;}',
-      '.location-dropdown.is-mobile-open .location-search-input{width:100%;height:40px;border:1px solid #e0d9d3;border-radius:12px;padding:0 12px;font-size:14px;outline:none;background:#fff;box-sizing:border-box;}',
-      '.location-dropdown.is-mobile-open .loc-mobile-loc-list{padding:0;}',
-      '.location-dropdown.is-mobile-open .mobile-loc-item{min-height:44px;padding:0 2px;font-size:14px;color:#9a8880;border-bottom:1px solid #f0ebe6;border-radius:0;background:transparent;gap:10px;}',
-      '.location-dropdown.is-mobile-open .mobile-loc-item.is-active{color:#3a2e28;font-weight:500;background:transparent;}',
-      '.location-dropdown.is-mobile-open .mobile-loc-item .mini-pin{opacity:0.35;width:16px;height:16px;background-size:14px 14px;}',
-      '.location-dropdown.is-mobile-open .mobile-loc-item.is-active .mini-pin{opacity:1;}',
-      /* ── Footer: info left, buttons right ── */
-      '.location-dropdown.is-mobile-open .loc-map-footer{display:flex!important;flex-direction:row!important;align-items:center;padding:12px 16px;gap:12px;border-top:1px solid #f0ebe6;}',
-      '.location-dropdown.is-mobile-open .loc-selected-info{flex:1;font-size:13px;color:#9a8880;text-align:left;}',
-      '.location-dropdown.is-mobile-open .loc-actions{display:flex;gap:8px;flex-shrink:0;}',
-      '.location-dropdown.is-mobile-open .loc-btn-clear-inline,.location-dropdown.is-mobile-open .loc-btn-apply-inline{height:40px;min-width:76px;display:flex;align-items:center;justify-content:center;border-radius:20px;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;box-sizing:border-box;padding:0 16px;}',
-      '.location-dropdown.is-mobile-open .loc-btn-clear-inline{border:1px solid #e0d9d3;background:#fff;color:#3a2e28;}',
-      '.location-dropdown.is-mobile-open .loc-btn-apply-inline{background:#3a2e28;border:1px solid #3a2e28;color:#fff;}'
+      '@media (max-width:991px){',
+      /* Override bottom-sheet: inline position */
+      '#bhb-filter .location-dropdown{position:relative!important;bottom:auto!important;top:auto!important;left:auto!important;right:auto!important;width:100%!important;max-height:none!important;height:auto!important;z-index:2!important;overflow:visible!important;animation:none!important;box-shadow:none!important;border-radius:12px;padding:0;margin-top:6px;border:1px solid #e0d9d3;}',
+      '#bhb-filter .location-dropdown.is-open{animation:none!important;}',
+      '#bhb-filter .location-dropdown .close-btn{display:none!important;}',
+      '#bhb-filter .location-dropdown .loc-body{overflow:visible;height:auto;}',
+      '#bhb-filter .location-dropdown .loc-panel-area.is-active,#bhb-filter .location-dropdown .loc-panel-maps.is-active{display:flex;flex-direction:column;height:auto;overflow:visible;padding:12px 16px;}',
+      /* Hide desktop-only elements */
+      '#bhb-filter .location-dropdown .tree-scroll{display:none!important;}',
+      '#bhb-filter .location-dropdown .loc-pill-col{display:none!important;}',
+      /* Tab bar */
+      '#bhb-filter .location-dropdown .loc-tabs{margin:12px 16px;padding:3px;background:#4d3f38;border-radius:50px;border:none;gap:2px;display:flex;flex-shrink:0;}',
+      '#bhb-filter .location-dropdown .loc-tab{flex:1;height:42px;border:none;border-radius:50px;background:transparent;color:rgba(255,255,255,0.55);font-size:14px;font-weight:500;cursor:pointer;transition:none;}',
+      '#bhb-filter .location-dropdown .loc-tab.is-active{background:#3a2e28!important;color:#fff!important;border-color:transparent!important;}',
+      '#bhb-filter .location-dropdown .loc-tab:hover:not(.is-active){background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.85);}',
+      /* Area panel: pills */
+      '#bhb-filter .location-dropdown .loc-mobile-area-pills{display:flex;flex-direction:column;gap:8px;padding:0;}',
+      '#bhb-filter .location-dropdown .mobile-area-pill{width:100%;background:#fff;border:1px solid #e0d9d3;border-radius:12px;padding:14px 16px;font-size:14px;font-weight:500;color:#3a2e28;text-align:left;cursor:pointer;display:block;box-sizing:border-box;}',
+      '#bhb-filter .location-dropdown .mobile-area-pill.is-active{background:#3a2e28;border-color:#3a2e28;color:#fff;}',
+      /* Map */
+      '#bhb-filter .location-dropdown .bali-map-wrap{height:180px!important;flex:none!important;border-radius:12px;overflow:hidden;margin-top:12px;position:relative;}',
+      '#bhb-filter .location-dropdown #locMapEl{position:absolute;inset:0;width:100%!important;height:100%!important;}',
+      /* Location panel: search + list */
+      '#bhb-filter .location-dropdown .location-search{padding:0 0 8px 0;border-bottom:none;display:flex;}',
+      '#bhb-filter .location-dropdown .location-search img{display:none;}',
+      '#bhb-filter .location-dropdown .location-search-input{width:100%;height:40px;border:1px solid #e0d9d3;border-radius:12px;padding:0 12px;font-size:14px;outline:none;background:#fff;box-sizing:border-box;}',
+      '#bhb-filter .location-dropdown .loc-mobile-loc-list{display:flex;flex-direction:column;padding:0;}',
+      '#bhb-filter .location-dropdown .mobile-loc-item{min-height:44px;padding:0 2px;font-size:14px;color:#9a8880;border-bottom:1px solid #f0ebe6;border-radius:0;background:transparent;gap:10px;display:flex;align-items:center;}',
+      '#bhb-filter .location-dropdown .mobile-loc-item.is-active{color:#3a2e28;font-weight:500;}',
+      '#bhb-filter .location-dropdown .mobile-loc-item .mini-pin{opacity:0.35;width:16px;height:16px;background-size:14px 14px;}',
+      '#bhb-filter .location-dropdown .mobile-loc-item.is-active .mini-pin{opacity:1;}',
+      /* Footer: info left, buttons right */
+      '#bhb-filter .location-dropdown .loc-map-footer{display:flex!important;flex-direction:row!important;align-items:center;padding:12px 16px;gap:12px;border-top:1px solid #f0ebe6;}',
+      '#bhb-filter .location-dropdown .loc-selected-info{flex:1;font-size:13px;color:#9a8880;text-align:left;}',
+      '#bhb-filter .location-dropdown .loc-actions{display:flex;gap:8px;flex-shrink:0;}',
+      '#bhb-filter .location-dropdown .loc-btn-clear-inline,#bhb-filter .location-dropdown .loc-btn-apply-inline{height:40px;min-width:76px;display:flex;align-items:center;justify-content:center;border-radius:20px;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;box-sizing:border-box;padding:0 16px;}',
+      '#bhb-filter .location-dropdown .loc-btn-clear-inline{border:1px solid #e0d9d3;background:#fff;color:#3a2e28;}',
+      '#bhb-filter .location-dropdown .loc-btn-apply-inline{background:#3a2e28;border:1px solid #3a2e28;color:#fff;}',
+      '}'
     ].join('');
     var s = document.createElement('style');
     s.setAttribute('data-bhb-mobile-loc', '1');
