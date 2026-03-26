@@ -483,9 +483,9 @@
     if (state.ownership === "Leasehold") return "/ara/yr";
     return "/ara";
   }
-  function passesPrice(d) {
-    if (state.priceMin === null && state.priceMax === null) return true;
-    var price = convertAmount(d.price, d.currency || "IDR", state.currency);
+  function passesPrice(d, card) {
+    var price = getPricePerAre(card);
+    if (!isFinite(price) || price === 0) price = d.price;
     if (state.priceMin !== null && price < state.priceMin) return false;
     if (state.priceMax !== null && price > state.priceMax) return false;
     return true;
@@ -513,7 +513,7 @@
       return false;
     if (state.locations.length > 0 && state.locations.indexOf(d.loc) === -1)
       return false;
-    if (!passesPrice(d)) return false;
+    if (!passesPrice(d, card)) return false;
     if (!passesLease(card)) return false;
     if (state.keyword) {
       var kw = state.keyword.toLowerCase();
@@ -693,19 +693,28 @@
       return d.ownership === ownershipLower;
     });
   }
+  function getPricePerAre(card) {
+    var inner = card.querySelector('.listings_card-wrapper') || card;
+    var priceAre = parseFloat(inner.dataset.priceAre || '0');
+    if (isFinite(priceAre) && priceAre > 0) return priceAre;
+    var priceTotal = parseFloat(inner.dataset.priceTotal || '0');
+    var size       = parseFloat(inner.dataset.size || '0');
+    if (isFinite(priceTotal) && priceTotal > 0 && size > 0) return priceTotal / size;
+    return 0;
+  }
   function calculatePriceRange(cards) {
-    var min = Infinity;
-    var max = 0;
+    var min = Infinity, max = 0;
     for (var i = 0; i < cards.length; i++) {
-      var d = getData(cards[i]);
-      if (!d.price || d.price <= 0) continue;
-      var priceIDR = convertAmount(d.price, d.currency || "IDR", "IDR");
+      var price = getPricePerAre(cards[i]);
+      if (!price || price <= 0) continue;
+      var d        = getData(cards[i]);
+      var priceIDR = convertAmount(price, d.currency || 'IDR', 'IDR');
       if (priceIDR < min) min = priceIDR;
       if (priceIDR > max) max = priceIDR;
     }
     return {
       min: min === Infinity ? 0 : min,
-      max: max === 0 ? 1000000 : max,
+      max: max === 0 ? 35000000 : max
     };
   }
   function updatePriceRangeForOwnership() {
