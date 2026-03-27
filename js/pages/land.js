@@ -486,8 +486,8 @@
   function passesPrice(d, card) {
     var price = getPricePerAre(card);
     if (!isFinite(price) || price === 0) price = d.price;
-    var cardCurrency = d.currency || 'IDR';
-    var priceInActiveCurrency = convertAmount(price, cardCurrency, state.currency);
+    // Land prices are always stored in IDR; convert to active display currency for comparison
+    var priceInActiveCurrency = convertAmount(price, 'IDR', state.currency);
     if (state.priceMin !== null && priceInActiveCurrency < state.priceMin) return false;
     if (state.priceMax !== null && priceInActiveCurrency > state.priceMax) return false;
     return true;
@@ -709,10 +709,9 @@
     for (var i = 0; i < cards.length; i++) {
       var price = getPricePerAre(cards[i]);
       if (!price || price <= 0) continue;
-      var d        = getData(cards[i]);
-      var priceIDR = convertAmount(price, d.currency || 'IDR', 'IDR');
-      if (priceIDR < min) min = priceIDR;
-      if (priceIDR > max) max = priceIDR;
+      // Land prices are always in IDR — no conversion needed
+      if (price < min) min = price;
+      if (price > max) max = price;
     }
     return {
       min: min === Infinity ? 0 : min,
@@ -1797,10 +1796,13 @@
       '@media (max-width:991px){',
       /* Override bottom-sheet: inline position */
       '#bhb-filter .location-dropdown{position:relative!important;bottom:auto!important;top:auto!important;left:auto!important;right:auto!important;width:100%!important;max-height:none!important;height:auto!important;z-index:2!important;overflow:visible!important;animation:none!important;box-shadow:none!important;border-radius:12px;padding:0;margin-top:6px;border:1px solid #e0d9d3;}',
+      /* Inside bottom-sheet form: remove standalone border/margin */
+      '#bhb-filter .rent-filter_form.is-mobile-open .location-dropdown{border:none!important;margin-top:0!important;}',
       '#bhb-filter .location-dropdown.is-open{animation:none!important;}',
       '#bhb-filter .location-dropdown .close-btn{display:none!important;}',
+      '#bhb-filter .price-dropdown .close-btn{display:none!important;}',
       '#bhb-filter .location-dropdown .loc-body{overflow:visible;height:auto;}',
-      '#bhb-filter .location-dropdown .loc-panel-area.is-active,#bhb-filter .location-dropdown .loc-panel-maps.is-active{display:flex;flex-direction:column;height:auto;overflow:visible;padding:12px 16px;}',
+      '#bhb-filter .location-dropdown .loc-panel-area.is-active,#bhb-filter .location-dropdown .loc-panel-maps.is-active{display:flex;flex-direction:column;height:auto;max-height:none!important;overflow:visible;padding:12px 16px;}',
       /* Hide desktop-only elements */
       '#bhb-filter .location-dropdown .tree-scroll{display:none!important;}',
       '#bhb-filter .location-dropdown .loc-pill-col{display:none!important;}',
@@ -1832,6 +1834,12 @@
       '#bhb-filter .location-dropdown .loc-btn-clear-inline,#bhb-filter .location-dropdown .loc-btn-apply-inline{height:40px;min-width:76px;display:flex;align-items:center;justify-content:center;border-radius:20px;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;box-sizing:border-box;padding:0 16px;}',
       '#bhb-filter .location-dropdown .loc-btn-clear-inline{border:1px solid #e0d9d3;background:#fff;color:#3a2e28;}',
       '#bhb-filter .location-dropdown .loc-btn-apply-inline{background:#3a2e28;border:1px solid #3a2e28;color:#fff;}',
+      '}',
+      /* Very small screens: stack footer vertically */
+      '@media (max-width:479px){',
+      '#bhb-filter .location-dropdown .loc-map-footer{flex-direction:column!important;align-items:stretch!important;padding:12px;}',
+      '#bhb-filter .location-dropdown .loc-selected-info{flex:none!important;margin-bottom:4px;}',
+      '#bhb-filter .location-dropdown .loc-actions{width:100%;justify-content:space-between;}',
       '}'
     ].join('');
     var s = document.createElement('style');

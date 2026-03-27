@@ -1324,11 +1324,11 @@
 
   #bhb-filter .rent-filter_form.is-mobile-open .loc-panel-area {
     height: auto;
-    max-height: 200px;
+    max-height: none;
   }
 
   #bhb-filter .rent-filter_form.is-mobile-open .bali-map-wrap {
-    height: 200px;
+    height: 180px;
   }
 
   /* Actions — centered column, w-48 */
@@ -1432,10 +1432,6 @@
 
   #bhb-filter .bhb-mobile-title {
     font-size: 24px;
-  }
-
-  #bhb-filter .rent-filter_form.is-mobile-open .rent-filter_top {
-    grid-template-columns: 1fr 1fr;
   }
 
   #bhb-filter .location-dropdown,
