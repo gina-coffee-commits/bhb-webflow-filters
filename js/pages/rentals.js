@@ -1111,6 +1111,10 @@
             clamp(cMax, slider.active.min, slider.active.max),
           );
           fullRender();
+          var quickEl = ch.closest('.pw-quick');
+          var allChips = quickEl ? quickEl.querySelectorAll('.pw-chip') : chips;
+          for (var j = 0; j < allChips.length; j++) allChips[j].classList.remove('is-active');
+          ch.classList.add('is-active');
           applyFilters();
         });
       })(chips[i]);
