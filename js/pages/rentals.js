@@ -2117,9 +2117,9 @@
       '#bhb-filter .location-dropdown .tree-scroll{display:none!important;}',
       '#bhb-filter .location-dropdown .loc-pill-col{display:none!important;}',
       /* Tab bar */
-      '#bhb-filter .location-dropdown .loc-tabs{margin:12px 16px;padding:3px;background:#4d3f38;border-radius:50px;border:none;gap:2px;display:flex;flex-shrink:0;}',
+      '#bhb-filter .location-dropdown .loc-tabs{margin:12px 16px;padding:3px;background:#262626;border-radius:50px;border:none;gap:2px;display:flex;flex-shrink:0;}',
       '#bhb-filter .location-dropdown .loc-tab{flex:1;height:42px;border:none;border-radius:50px;background:transparent;color:rgba(255,255,255,0.55);font-size:14px;font-weight:500;cursor:pointer;transition:none;}',
-      '#bhb-filter .location-dropdown .loc-tab.is-active{background:#3a2e28!important;color:#fff!important;border-color:transparent!important;}',
+      '#bhb-filter .location-dropdown .loc-tab.is-active{background:#1c1917!important;color:#fff!important;border-color:transparent!important;}',
       '#bhb-filter .location-dropdown .loc-tab:hover:not(.is-active){background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.85);}',
       /* Area panel: pills */
       '#bhb-filter .location-dropdown .loc-mobile-area-pills{display:flex;flex-direction:column;gap:8px;padding:0;}',
